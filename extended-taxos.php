@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.1
+Version:      1.2.2
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -91,7 +91,7 @@ class ExtendedTaxonomy {
 		if ( $this->args['exclusive'] or $this->args['meta_box'] )
 			add_action( 'add_meta_boxes', array( $this, '_meta_boxes' ), 10, 2 );
 
-		add_action( 'init', array( $this, 'register_taxonomy' ), 10 );
+		add_action( 'init', array( $this, 'register_taxonomy' ), 9 );
 
 		#add_action( "manage_edit-{$this->taxonomy}_columns",          array( $this, '_cols' ) );
 		#add_action( "manage_{$this->taxonomy}_custom_column",         array( $this, '_col' ), 10, 3 );
