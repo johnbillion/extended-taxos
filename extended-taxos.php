@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.3
+Version:      1.2.4
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -38,7 +38,8 @@ class ExtendedTaxonomy {
 		'query_var'         => true,
 		'exclusive'         => false, # Custom arg
 		'meta_box'          => false, # Custom arg
-		'allow_hierarchy'   => false  # Custom arg
+		'allow_hierarchy'   => false, # Custom arg
+		'allow_ordering'    => false  # Custom arg (@see term order plugin)
 	);
 
 	function __construct( $taxonomy, $object_types, $args = array(), $plural = null ) {
