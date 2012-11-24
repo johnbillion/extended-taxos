@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.2
+Version:      1.2.3
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -71,15 +71,22 @@ class ExtendedTaxonomy {
 			'choose_from_most_used'      => sprintf( __( 'Choose from most used %s', 'theme_admin' ), $this->tax_plural_low ),
 			'view_item'                  => sprintf( __( 'View %s', 'theme_admin' ), $this->tax_singular )
 		);
-		$this->defaults['rewrite'] = array(
-			'slug'         => $this->tax_slug,
-			'with_front'   => false,
-			'hierarchical' => isset( $args['allow_hierarchy'] ) ? $args['allow_hierarchy'] : $this->defaults['allow_hierarchy']
-		);
 
-		if ( isset( $args['public'] ) and !$args['public'] ) {
-			$this->defaults['show_in_nav_menus'] = false;
-			$this->defaults['show_ui']           = false;
+		# 'public' is a meta argument, set some defaults
+		if ( isset( $args['public'] ) ) {
+			$this->defaults['show_in_nav_menus'] = $args['public'];
+			$this->defaults['show_ui']           = $args['public'];
+		}
+
+		# Only set rewrites if we need them
+		if ( ( isset( $args['public'] ) and !$args['public'] ) or ( !$this->defaults['public'] ) ) {
+			$this->defaults['rewrite'] = false;
+		} else {
+			$this->defaults['rewrite'] = array(
+				'slug'         => $this->tax_slug,
+				'with_front'   => false,
+				'hierarchical' => isset( $args['allow_hierarchy'] ) ? $args['allow_hierarchy'] : $this->defaults['allow_hierarchy']
+			);
 		}
 
 		$this->args = wp_parse_args( $args, $this->defaults );
@@ -282,6 +289,33 @@ class Walker_ExtendedTaxonomySimple extends Walker {
 		$output .= "</li>\n";
 	}
 
+}
+
+class Walker_ExtendedTaxonomyDropdown extends Walker {
+
+	var $tree_type = 'category';
+	var $db_fields = array(
+		'parent' => 'parent',
+		'id' => 'term_id'
+	);
+
+	function start_el( &$output, $category, $depth, $args ) {
+		$pad = str_repeat( '&nbsp;', $depth * 3 );
+
+		$cat_name = apply_filters('list_cats', $category->name, $category);
+		$output .= "\t<option class=\"level-$depth\" value=\"".$category->slug."\"";
+		if ( $category->slug == $args['selected'] )
+			$output .= ' selected="selected"';
+		$output .= '>';
+		$output .= $pad.$cat_name;
+		if ( $args['show_count'] )
+			$output .= '&nbsp;&nbsp;('. $category->count .')';
+		if ( $args['show_last_update'] ) {
+			$format = 'Y-m-d';
+			$output .= '&nbsp;&nbsp;' . gmdate($format, $category->last_update_timestamp);
+		}
+		$output .= "</option>\n";
+	}
 }
 
 function register_extended_taxonomy( $taxonomy, $object_types, $args = array(), $plural = null ) {
