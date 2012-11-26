@@ -2,9 +2,12 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.3.1
+Version:      1.3.2
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
+License:      GPL v2 or later
+
+Copyright © 2012 John Blackbourn
 
 Extended Taxonomies provides extended functionality to custom taxonomies in WordPress, allowing you to quickly build custom taxonomies without having to write the same code again and again.
 
@@ -18,19 +21,10 @@ Extended Taxonomies provides extended functionality to custom taxonomies in Word
 = Extended features =
 
  * Custom meta box support
-   - Built-in meta boxes for radios and simplified checkboxes
+   - Built-in meta boxes for radio buttons, dropdowns and simplified checkboxes
  * Add taxonomies to the 'Right Now' section on the dashboard
  * Allow object terms to be exclusive (partial)
  * Allow or prevent hierarchy within taxonomy (partial)
-
-= @TODO =
-
- * Meta box for a dropdown menu of terms
- * Multitaxonomical™ combined meta boxes
- * Allow boolean false to disable the meta box
- * The 'radio' meta box on a non-exclusive taxonomy doesn't show the singular label
- * Custom admin screen columns
- * Support more than one post type per taxonomy in the 'Right Now' widget
 
 = License =
 
@@ -73,7 +67,6 @@ class ExtendedTaxonomy {
 		'right_now'         => false, # Custom arg
 		'exclusive'         => false, # Custom arg
 		'allow_hierarchy'   => false, # Custom arg
-		'allow_ordering'    => false, # Custom arg (@see Term Order plugin)
 		'checked_ontop'     => true,  # Custom arg
 	);
 
@@ -111,11 +104,11 @@ class ExtendedTaxonomy {
 	 * The $args parameter accepts all the standard arguments for register_taxonomy() in addition to
 	 * several custom arguments that provide extended functionality:
 	 *
-	 * - meta_box - string - The name of the custom meta box to use on the post editing screen for this
-	 * taxonomy. Two custom meta boxes are provided: 'radio' for a meta box with radio inputs, and
-	 * 'simple' for a meta box with a simplified list of checkboxes. You can also pass the name of a
-	 * callback function, eg my_super_meta_box(). Defaults to null, which means the standard meta box
-	 * is used.
+	 * - meta_box - string|bool - The name of the custom meta box to use on the post editing screen for
+	 * this taxonomy. Three custom meta boxes are provided: 'radio' for a meta box with radio inputs,
+	 * 'simple' for a meta box with a simplified list of checkboxes, and 'dropdown' for a meta box with
+	 * a dropdown menu. You can also pass the name of a callback function, eg my_super_meta_box(), or
+	 * boolean false to remove the meta box. Defaults to null, meaning the standard meta box is used.
 	 *
 	 * - right_now - boolean - Whether to show this taxonomy on the 'Right Now' section of WordPress'
 	 * dashboard. Defaults to false.
@@ -129,9 +122,6 @@ class ExtendedTaxonomy {
 	 *
 	 * - allow_hierarchy - boolean - All this does currently is disable hierarchy in the taxonomy's
 	 * rewrite rules. Defaults to false.
-	 *
-	 * - allow_ordering - boolean - If you're running the Term Order plugin, this argument will control
-	 * whether this taxonomy is orderable using that plugin. Defaults to false.
 	 *
 	 * @param string $taxonomy The taxonomy name
 	 * @param array|string $object_type Name(s) of the object type(s) for the taxonomy
@@ -210,7 +200,7 @@ class ExtendedTaxonomy {
 		if ( is_admin() ) {
 
 			# Meta boxes:
-			if ( $this->args['exclusive'] or $this->args['meta_box'] )
+			if ( $this->args['exclusive'] or isset( $this->args['meta_box'] ) )
 				add_action( 'add_meta_boxes', array( $this, 'meta_boxes' ), 10, 2 );
 
 			# 'Right Now' dashboard widget:
@@ -219,11 +209,6 @@ class ExtendedTaxonomy {
 
 			# Term updated messages:
 			add_filter( 'term_updated_messages', array( $this, 'term_updated_messages' ), 1, 2 );
-
-			# Extended Taxonomies doesn't support custom columns as I've yet to have a need for them
-			#add_action( "manage_edit-{$this->taxonomy}_columns",          array( $this, '_cols' ) );
-			#add_action( "manage_{$this->taxonomy}_custom_column",         array( $this, '_col' ), 10, 3 );
-			#add_filter( "manage_edit-{$this->taxonomy}_sortable_columns", array( $this, '_sortables' ) );
 
 		}
 
@@ -262,10 +247,15 @@ class ExtendedTaxonomy {
 			if ( $this->args['meta_box'] ) {
 
 				# Set the 'meta_box' argument to the actual meta box callback function name:
-				if ( 'simple' == $this->args['meta_box'] )
+				if ( 'simple' == $this->args['meta_box'] ) {
 					$this->args['meta_box'] = array( $this, 'meta_box_simple' );
-				else if ( 'radio' == $this->args['meta_box'] )
+				} else if ( 'radio' == $this->args['meta_box'] ) {
+					$this->args['exclusive'] = true;
 					$this->args['meta_box'] = array( $this, 'meta_box_radio' );
+				} else if ( 'dropdown' == $this->args['meta_box'] ) {
+					$this->args['exclusive'] = true;
+					$this->args['meta_box'] = array( $this, 'meta_box_dropdown' );
+				}
 
 				# Add the meta box, using the plural or singular taxonomy label where relevant:
 				if ( $this->args['exclusive'] )
@@ -273,7 +263,7 @@ class ExtendedTaxonomy {
 				else
 					add_meta_box( "{$this->taxonomy}div", $tax->labels->name, $this->args['meta_box'], $post_type, 'side' );
 
-			} else {
+			} else if ( false !== $this->args['meta_box'] ) {
 
 				# This must be an 'exclusive' taxonomy. Add the radio meta box:
 				add_meta_box( "{$this->taxonomy}div", $tax->labels->singular_name, array( $this, 'meta_box_radio' ), $post_type, 'side' );
@@ -296,7 +286,23 @@ class ExtendedTaxonomy {
 	function meta_box_radio( $post, $meta_box ) {
 
 		$walker = new Walker_ExtendedTaxonomyRadio;
-		$this->do_meta_box( $post, $walker, true );
+		$this->do_meta_box( $post, $walker, true, 'checklist' );
+
+	}
+
+	/**
+	 * Display the 'dropdown' meta box on the post editing screen.
+	 *
+	 * Uses the Walker_ExtendedTaxonomyDropdown class for the walker.
+	 *
+	 * @param object $post The post object
+	 * @param array $meta_box The meta box arguments
+	 * @return null
+	 */
+	function meta_box_dropdown( $post, $meta_box ) {
+
+		$walker = new Walker_ExtendedTaxonomyDropdown;
+		$this->do_meta_box( $post, $walker, true, 'dropdown' );
 
 	}
 
@@ -319,9 +325,10 @@ class ExtendedTaxonomy {
 	 * @param object $post The post object
 	 * @param object $walker An optional term walker
 	 * @param bool $show_none Whether to include a 'none' item in the term list
+	 * @param string $type The taxonomy list type (checklist or dropdown)
 	 * @return null
 	 */
-	function do_meta_box( $post, $walker = null, $show_none = false ) {
+	function do_meta_box( $post, $walker = null, $show_none = false, $type = 'checklist' ) {
 
 		$taxonomy = $this->taxonomy;
 		$tax      = get_taxonomy( $taxonomy );
@@ -330,54 +337,87 @@ class ExtendedTaxonomy {
 		?>
 		<div id="taxonomy-<?php echo $taxonomy; ?>" class="categorydiv">
 
-			<?php # Style for the 'none' item: ?>
-			<style type="text/css">
-				#<?php echo $taxonomy; ?>-0 {
-					color: #888;
-					border-top: 1px solid #eee;
-					margin-top: 5px;
-				}
-			</style>
+			<?php
+			
+			switch ( $type ) {
 
-			<input type="hidden" name="tax_input[<?php echo $taxonomy; ?>][]" value="0" />
+				case 'dropdown':
 
-			<ul id="<?php echo $taxonomy; ?>checklist" class="list:<?php echo $taxonomy; ?> categorychecklist form-no-clear">
-				<?php
+					wp_dropdown_categories( array(
+						'show_option_none' => __( 'Not Specified', 'extended_taxonomies' ),
+						'hide_empty'       => false,
+						'hierarchical'     => true,
+						'show_count'       => false,
+						'orderby'          => 'name',
+						'selected'         => $selected,
+						'id'               => "{$taxonomy}dropdown",
+						'name'             => "tax_input[{$taxonomy}]",
+						'taxonomy'         => $taxonomy,
+						'walker'           => $walker
+					) );
 
-				# Output the terms:
-				wp_terms_checklist( $post->ID, array(
-					'taxonomy'      => $taxonomy,
-					'walker'        => $walker,
-					'selected_cats' => $selected,
-					'checked_ontop' => $this->args['checked_ontop']
-				) );
+					break;
 
-				# Output the 'none' item:
-				if ( $show_none ) {
-					$output = '';
-					$o = (object) array(
-						'term_id' => 0,
-						'name'    => __( 'Not Specified', 'extended_taxonomies' ),
-						'slug'    => 'none'
-					);
-					if ( empty( $selected ) )
-						$_selected = array( 0 );
-					else
-						$_selected = $selected;
-					$args = array(
-						'taxonomy'      => $taxonomy,
-						'popular_cats'  => array(),
-						'selected_cats' => $_selected,
-						'disabled'      => false
-					);
-					$walker->start_el( $output, $o, 1, $args );
-					$walker->end_el( $output, $o, 1, $args );
-					echo $output;
-				}
+				case 'checklist':
+				default:
 
-				?>
+					?>
+					<style type="text/css">
+						/* Style for the 'none' item: */
+						#<?php echo $taxonomy; ?>-0 {
+							color: #888;
+							border-top: 1px solid #eee;
+							margin-top: 5px;
+						}
+					</style>
 
-			</ul>
+					<input type="hidden" name="tax_input[<?php echo $taxonomy; ?>][]" value="0" />
+
+					<ul id="<?php echo $taxonomy; ?>checklist" class="list:<?php echo $taxonomy; ?> categorychecklist form-no-clear">
+						<?php
+
+						# Output the terms:
+						wp_terms_checklist( $post->ID, array(
+							'taxonomy'      => $taxonomy,
+							'walker'        => $walker,
+							'selected_cats' => $selected,
+							'checked_ontop' => $this->args['checked_ontop']
+						) );
+
+						# Output the 'none' item:
+						if ( $show_none ) {
+							$output = '';
+							$o = (object) array(
+								'term_id' => 0,
+								'name'    => __( 'Not Specified', 'extended_taxonomies' ),
+								'slug'    => 'none'
+							);
+							if ( empty( $selected ) )
+								$_selected = array( 0 );
+							else
+								$_selected = $selected;
+							$args = array(
+								'taxonomy'      => $taxonomy,
+								'popular_cats'  => array(),
+								'selected_cats' => $_selected,
+								'disabled'      => false
+							);
+							$walker->start_el( $output, $o, 1, $args );
+							$walker->end_el( $output, $o, 1, $args );
+							echo $output;
+						}
+
+						?>
+
+					</ul>
+
+					<?php
+
+					break;
+
+			}
+
+		?>
 
 		</div>
 		<?php
@@ -576,6 +616,46 @@ class Walker_ExtendedTaxonomyDropdownSlug extends Walker {
 		$cat_name = apply_filters( 'list_cats', $term->name, $term );
 		$output .= "\t<option class=\"level-$depth\" value=\"".$term->slug."\"";
 		if ( $term->slug == $args['selected'] )
+			$output .= ' selected="selected"';
+		$output .= '>';
+		$output .= $pad.$cat_name;
+		if ( $args['show_count'] )
+			$output .= '&nbsp;&nbsp;('. $term->count .')';
+		$output .= "</option>\n";
+	}
+
+}
+
+
+/**
+ * A term walker class for a dropdown menu.
+ *
+ */
+class Walker_ExtendedTaxonomyDropdown extends Walker {
+
+	/**
+	 * Some member variables you don't need to worry too much about:
+	 */
+	var $tree_type = 'category';
+	var $db_fields = array(
+		'parent' => 'parent',
+		'id' => 'term_id'
+	);
+
+	/**
+	 * Start the element output.
+	 *
+	 * @param string $output Passed by reference. Used to append additional content.
+	 * @param object $term Term data object.
+	 * @param int $depth Depth of term in reference to parents.
+	 * @param array $args Optional arguments.
+	 */
+	function start_el( &$output, $term, $depth, $args ) {
+		$pad = str_repeat( '&nbsp;', $depth * 3 );
+
+		$cat_name = apply_filters( 'list_cats', $term->name, $term );
+		$output .= "\t<option class=\"level-$depth\" value=\"".$term->term_id."\"";
+		if ( in_array( $term->term_id, $args['selected'] ) )
 			$output .= ' selected="selected"';
 		$output .= '>';
 		$output .= $pad.$cat_name;
