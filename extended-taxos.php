@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.7
+Version:      1.2.8
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -159,11 +159,10 @@ class ExtendedTaxonomy {
 	}
 
 	function meta_box_simple( $post, $box ) {
-		$walker = new Walker_ExtendedTaxonomySimple;
-		$this->do_meta_box( $post, $walker );
+		$this->do_meta_box( $post );
 	}
 
-	function do_meta_box( $post, $walker, $show_none = false ) {
+	function do_meta_box( $post, $walker = null, $show_none = false ) {
 
 		$taxonomy = $this->taxonomy;
 		$tax      = get_taxonomy( $taxonomy );
@@ -174,7 +173,7 @@ class ExtendedTaxonomy {
 
 			<style type="text/css">
 				#<?php echo $taxonomy; ?>-0 {
-					color: #999;
+					color: #888;
 					border-top: 1px solid #eee;
 					margin-top: 5px;
 				}
@@ -195,7 +194,7 @@ class ExtendedTaxonomy {
 					$output = '';
 					$o = (object) array(
 						'term_id' => 0,
-						'name'    => 'Not Specified',
+						'name'    => __( 'Not Specified', 'extended_taxonomies' ),
 						'slug'    => 'none'
 					);
 					if ( empty( $selected ) )
@@ -295,46 +294,6 @@ class Walker_ExtendedTaxonomyRadio extends Walker {
 		$output .= "\n<li id='{$args['taxonomy']}-{$category->term_id}'$class>" .
 			'<label class="selectit">' .
 			'<input value="' . $category->term_id . '" type="radio" name="'.$name.'[]" ' .
-				'id="in-'.$args['taxonomy'].'-' . $category->term_id . '"' .
-				checked( in_array( $category->term_id, $args['selected_cats'] ), true, false ) .
-				disabled( empty( $args['disabled'] ), false, false ) .
-			' /> ' .
-			esc_html( apply_filters('the_category', $category->name )) .
-			'</label>';
-
-	}
-
-	function end_el( &$output, $category, $depth, $args ) {
-		$output .= "</li>\n";
-	}
-
-}
-
-class Walker_ExtendedTaxonomySimple extends Walker {
-
-	var $tree_type = 'category';
-	var $db_fields = array(
-		'parent' => 'parent',
-		'id' => 'term_id'
-	);
-
-	function start_lvl( &$output, $depth, $args ) {
-		$indent = str_repeat( "\t", $depth );
-		$output .= "$indent<ul class='children'>\n";
-	}
-
-	function end_lvl( &$output, $depth, $args ) {
-		$indent = str_repeat( "\t", $depth );
-		$output .= "$indent</ul>\n";
-	}
-
-	function start_el( &$output, $category, $depth, $args ) {
-
-		$name = 'tax_input[' . $args['taxonomy'] . ']';
-		$class = in_array( $category->term_id, $args['popular_cats'] ) ? ' class="popular-category popular-' . $args['taxonomy'] . '"' : '';
-		$output .= "\n<li id='{$args['taxonomy']}-{$category->term_id}'$class>" .
-			'<label class="selectit">' .
-			'<input value="' . $category->term_id . '" type="checkbox" name="'.$name.'[]" ' .
 				'id="in-'.$args['taxonomy'].'-' . $category->term_id . '"' .
 				checked( in_array( $category->term_id, $args['selected_cats'] ), true, false ) .
 				disabled( empty( $args['disabled'] ), false, false ) .
