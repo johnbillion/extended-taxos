@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.6
+Version:      1.2.7
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -43,15 +43,25 @@ class ExtendedTaxonomy {
 		'allow_ordering'    => false  # Custom arg (@see Term Order plugin)
 	);
 
-	function __construct( $taxonomy, $object_types, $args = array(), $plural = null ) {
+	function __construct( $taxonomy, $object_types, $args = array(), $plural = null, $slug = null ) {
 
-		$this->taxonomy         = $taxonomy;
-		$this->object_types     = (array) $object_types;
-		$this->tax_slug         = ( $plural ) ? $plural : $taxonomy . 's';
+		$this->taxonomy     = $taxonomy;
+		$this->object_types = (array) $object_types;
+
+		if ( $slug )
+			$this->tax_slug = $slug;
+		else if ( $plural )
+			$this->tax_slug = $plural;
+		else
+			$this->tax_slug = $taxonomy . 's';
+
+		if ( $plural )
+			$this->tax_plural = $plural;
+		else
+			$this->tax_plural = $this->tax_slug;
+
 		$this->tax_singular     = ucwords( str_replace( array( '-', '_' ), ' ', $this->taxonomy ) );
-		$this->tax_plural       = ucwords( str_replace( array( '-', '_' ), ' ', $this->tax_slug ) );
-		$this->taxonomy         = strtolower( $this->taxonomy );
-		$this->tax_slug         = strtolower( $this->tax_slug );
+		$this->tax_plural       = ucwords( str_replace( array( '-', '_' ), ' ', $this->tax_plural ) );
 		$this->tax_singular_low = strtolower( $this->tax_singular );
 		$this->tax_plural_low   = strtolower( $this->tax_plural );
 
@@ -255,9 +265,8 @@ class ExtendedTaxonomy {
 	}
 
 	function register_taxonomy() {
-		return register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
+		register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
 	}
-
 
 }
 
@@ -369,8 +378,8 @@ class Walker_ExtendedTaxonomyDropdownSlug extends Walker {
 
 }
 
-function register_extended_taxonomy( $taxonomy, $object_types, $args = array(), $plural = null ) {
-	return new ExtendedTaxonomy( $taxonomy, $object_types, $args, $plural );
+function register_extended_taxonomy( $taxonomy, $object_types, $args = array(), $plural = null, $slug = null ) {
+	return new ExtendedTaxonomy( $taxonomy, $object_types, $args, $plural, $slug );
 }
 
 ?>
