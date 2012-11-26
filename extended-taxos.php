@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.3
+Version:      1.3.1
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -74,6 +74,7 @@ class ExtendedTaxonomy {
 		'exclusive'         => false, # Custom arg
 		'allow_hierarchy'   => false, # Custom arg
 		'allow_ordering'    => false, # Custom arg (@see Term Order plugin)
+		'checked_ontop'     => true,  # Custom arg
 	);
 
 	/**
@@ -347,7 +348,8 @@ class ExtendedTaxonomy {
 				wp_terms_checklist( $post->ID, array(
 					'taxonomy'      => $taxonomy,
 					'walker'        => $walker,
-					'selected_cats' => $selected
+					'selected_cats' => $selected,
+					'checked_ontop' => $this->args['checked_ontop']
 				) );
 
 				# Output the 'none' item:
@@ -395,8 +397,8 @@ class ExtendedTaxonomy {
 		$num   = number_format_i18n( $count );
 
 		if ( current_user_can( $taxonomy->cap->manage_terms ) ) {
-			$num  = '<a href="edit-tags.php?taxonomy=' . $this->taxonomy . '&amp;post_type=' . $taxonomy->object_type[0] . '">' . $num . '</a>';
-			$text = '<a href="edit-tags.php?taxonomy=' . $this->taxonomy . '&amp;post_type=' . $taxonomy->object_type[0] . '">' . $text . '</a>';
+			$num  = '<a href="edit-tags.php?taxonomy=' . $this->taxonomy . '&amp;post_type=' . reset( $taxonomy->object_type ) . '">' . $num . '</a>';
+			$text = '<a href="edit-tags.php?taxonomy=' . $this->taxonomy . '&amp;post_type=' . reset( $taxonomy->object_type ) . '">' . $text . '</a>';
 		}
 
 		echo '<tr>';
@@ -460,8 +462,8 @@ class ExtendedTaxonomy {
 	 */
 	function register_taxonomy() {
 
-		if ( 'type' == $this->taxonomy )
-			trigger_error( sprintf( __( '"%s" is not allowed as a taxonomy name', 'extended_taxonomies' ), 'type' ), E_USER_ERROR );
+		if ( in_array( $this->taxonomy, array( 'type', 'tab' ) ) )
+			trigger_error( sprintf( __( '"%s" is not allowed as a taxonomy name', 'extended_taxonomies' ), $this->taxonomy ), E_USER_ERROR );
 		else
 			register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
 
@@ -579,10 +581,6 @@ class Walker_ExtendedTaxonomyDropdownSlug extends Walker {
 		$output .= $pad.$cat_name;
 		if ( $args['show_count'] )
 			$output .= '&nbsp;&nbsp;('. $term->count .')';
-		if ( $args['show_last_update'] ) {
-			$format = 'Y-m-d';
-			$output .= '&nbsp;&nbsp;' . gmdate( $format, $term->last_update_timestamp );
-		}
 		$output .= "</option>\n";
 	}
 
