@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.3.2
+Version:      1.4
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 License:      GPL v2 or later
@@ -45,8 +45,8 @@ GNU General Public License for more details.
  * Wrapper function for instantiating a new ExtendedTaxonomy object. This is the only function you need.
  * See the ExtendedTaxonomy class constructor for parameters.
  */
-function register_extended_taxonomy( $taxonomy, $object_types, $args = array(), $plural = null, $slug = null ) {
-	return new ExtendedTaxonomy( $taxonomy, $object_types, $args, $plural, $slug );
+function register_extended_taxonomy( $taxonomy, $object_types, $args = array(), $plural = null, $slug = null, $singular = null ) {
+	return new ExtendedTaxonomy( $taxonomy, $object_types, $args, $plural, $slug, $singular );
 }
 
 class ExtendedTaxonomy {
@@ -130,10 +130,12 @@ class ExtendedTaxonomy {
 	 * @param string $slug The taxonomy slug (optional)
 	 * @return null
 	 */
-	function __construct( $taxonomy, $object_types, $args = array(), $plural = null, $slug = null ) {
+	function __construct( $taxonomy, $object_types, $args = array(), $plural = null, $slug = null, $singular = null ) {
 
-		$this->taxonomy     = $taxonomy;
-		$this->object_types = (array) $object_types;
+		if ( $singular )
+			$this->tax_singular = $singular;
+		else
+			$this->tax_singular = $taxonomy;
 
 		if ( $slug )
 			$this->tax_slug = $slug;
@@ -147,30 +149,36 @@ class ExtendedTaxonomy {
 		else
 			$this->tax_plural = $this->tax_slug;
 
+		$this->object_types = (array) $object_types;
+		$this->taxonomy     = strtolower( $taxonomy );
+		$this->tax_slug     = strtolower( $this->tax_slug );
+
 		# Build our base taxonomy names:
-		$this->tax_singular     = ucwords( str_replace( array( '-', '_' ), ' ', $this->taxonomy ) );
+		$this->tax_singular     = ucwords( str_replace( array( '-', '_' ), ' ', $this->tax_singular ) );
 		$this->tax_plural       = ucwords( str_replace( array( '-', '_' ), ' ', $this->tax_plural ) );
 		$this->tax_singular_low = strtolower( $this->tax_singular );
 		$this->tax_plural_low   = strtolower( $this->tax_plural );
 
 		# Build our labels:
 		$this->defaults['labels'] = array(
+			'menu_name'                  => $this->tax_plural,
 			'name'                       => $this->tax_plural,
 			'singular_name'              => $this->tax_singular,
-			'menu_name'                  => $this->tax_plural,
 			'search_items'               => sprintf( 'Search %s', $this->tax_plural ),
 			'popular_items'              => sprintf( 'Popular %s', $this->tax_plural ),
 			'all_items'                  => sprintf( 'All %s', $this->tax_plural ),
 			'parent_item'                => sprintf( 'Parent %s', $this->tax_singular ),
 			'parent_item_colon'          => sprintf( 'Parent %s:', $this->tax_singular ),
 			'edit_item'                  => sprintf( 'Edit %s', $this->tax_singular ),
+			'view_item'                  => sprintf( 'View %s', $this->tax_singular ),
 			'update_item'                => sprintf( 'Update %s', $this->tax_singular ),
 			'add_new_item'               => sprintf( 'Add New %s', $this->tax_singular ),
 			'new_item_name'              => sprintf( 'New %s Name', $this->tax_singular ),
 			'separate_items_with_commas' => sprintf( 'Separate %s with commas', $this->tax_plural_low ),
 			'add_or_remove_items'        => sprintf( 'Add or remove %s', $this->tax_plural_low ),
 			'choose_from_most_used'      => sprintf( 'Choose from most used %s', $this->tax_plural_low ),
-			'view_item'                  => sprintf( 'View %s', $this->tax_singular )
+			'no_item'                    => sprintf( 'No %s', $this->tax_singular ) # Custom label
+
 		);
 
 		# 'public' is a meta argument, so set some defaults if it's present:
@@ -243,6 +251,9 @@ class ExtendedTaxonomy {
 				remove_meta_box( "{$this->taxonomy}div", $post_type, 'side' );
 			else
 				remove_meta_box( "tagsdiv-{$this->taxonomy}", $post_type, 'side' );
+
+			if ( !current_user_can( $tax->cap->assign_terms ) )
+				return;
 
 			if ( $this->args['meta_box'] ) {
 
@@ -334,6 +345,15 @@ class ExtendedTaxonomy {
 		$tax      = get_taxonomy( $taxonomy );
 		$selected = wp_get_object_terms( $post->ID, $taxonomy, array( 'fields' => 'ids' ) );
 
+		if ( $show_none ) {
+			if ( isset( $tax->labels->no_item ) )
+				$none = $tax->labels->no_item;
+			else
+				$none = __( 'Not Specified', 'ext_taxos' );
+		} else {
+			$none = '';
+		}
+
 		?>
 		<div id="taxonomy-<?php echo $taxonomy; ?>" class="categorydiv">
 
@@ -344,7 +364,7 @@ class ExtendedTaxonomy {
 				case 'dropdown':
 
 					wp_dropdown_categories( array(
-						'show_option_none' => __( 'Not Specified', 'extended_taxonomies' ),
+						'show_option_none' => $none,
 						'hide_empty'       => false,
 						'hierarchical'     => true,
 						'show_count'       => false,
@@ -389,7 +409,7 @@ class ExtendedTaxonomy {
 							$output = '';
 							$o = (object) array(
 								'term_id' => 0,
-								'name'    => __( 'Not Specified', 'extended_taxonomies' ),
+								'name'    => $none,
 								'slug'    => 'none'
 							);
 							if ( empty( $selected ) )
@@ -503,7 +523,7 @@ class ExtendedTaxonomy {
 	function register_taxonomy() {
 
 		if ( in_array( $this->taxonomy, array( 'type', 'tab' ) ) )
-			trigger_error( sprintf( __( '"%s" is not allowed as a taxonomy name', 'extended_taxonomies' ), $this->taxonomy ), E_USER_ERROR );
+			trigger_error( sprintf( __( '"%s" is not allowed as a taxonomy name', 'ext_taxos' ), $this->taxonomy ), E_USER_ERROR );
 		else
 			register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
 
