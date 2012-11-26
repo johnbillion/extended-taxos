@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.4
+Version:      1.2.5
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -12,7 +12,7 @@ Extended Taxonomies provides better defaults so taxonomies can be created with v
    - Intelligent defaults for all labels
    - Hierarchical by default
    - Drop with_front from rewrite rules
- * Allow object terms to be exclusive (woo!)
+ * Allow object terms to be exclusive (partial)
  * Allow or prevent hierarchy within taxonomy (partial)
  * Custom meta box support
    - Built-in meta boxes for radios and checkboxes
@@ -39,7 +39,7 @@ class ExtendedTaxonomy {
 		'exclusive'         => false, # Custom arg
 		'meta_box'          => false, # Custom arg
 		'allow_hierarchy'   => false, # Custom arg
-		'allow_ordering'    => false  # Custom arg (@see term order plugin)
+		'allow_ordering'    => false  # Custom arg (@see Term Order plugin)
 	);
 
 	function __construct( $taxonomy, $object_types, $args = array(), $plural = null ) {
@@ -58,19 +58,19 @@ class ExtendedTaxonomy {
 			'name'                       => $this->tax_plural,
 			'singular_name'              => $this->tax_singular,
 			'menu_name'                  => $this->tax_plural,
-			'search_items'               => sprintf( __( 'Search %s', 'theme_admin' ), $this->tax_plural ),
-			'popular_items'              => sprintf( __( 'Popular %s', 'theme_admin' ), $this->tax_plural ),
-			'all_items'                  => sprintf( __( 'All %s', 'theme_admin' ), $this->tax_plural ),
-			'parent_item'                => sprintf( __( 'Parent %s', 'theme_admin' ), $this->tax_singular ),
-			'parent_item_colon'          => sprintf( __( 'Parent %s:', 'theme_admin' ), $this->tax_singular ),
-			'edit_item'                  => sprintf( __( 'Edit %s', 'theme_admin' ), $this->tax_singular ),
-			'update_item'                => sprintf( __( 'Update %s', 'theme_admin' ), $this->tax_singular ),
-			'add_new_item'               => sprintf( __( 'Add New %s', 'theme_admin' ), $this->tax_singular ),
-			'new_item_name'              => sprintf( __( 'New %s Name', 'theme_admin' ), $this->tax_singular ),
-			'separate_items_with_commas' => sprintf( __( 'Separate %s with commas', 'theme_admin' ), $this->tax_plural_low ),
-			'add_or_remove_items'        => sprintf( __( 'Add or remove %s', 'theme_admin' ), $this->tax_plural_low ),
-			'choose_from_most_used'      => sprintf( __( 'Choose from most used %s', 'theme_admin' ), $this->tax_plural_low ),
-			'view_item'                  => sprintf( __( 'View %s', 'theme_admin' ), $this->tax_singular )
+			'search_items'               => sprintf( 'Search %s', $this->tax_plural ),
+			'popular_items'              => sprintf( 'Popular %s', $this->tax_plural ),
+			'all_items'                  => sprintf( 'All %s', $this->tax_plural ),
+			'parent_item'                => sprintf( 'Parent %s', $this->tax_singular ),
+			'parent_item_colon'          => sprintf( 'Parent %s:', $this->tax_singular ),
+			'edit_item'                  => sprintf( 'Edit %s', $this->tax_singular ),
+			'update_item'                => sprintf( 'Update %s', $this->tax_singular ),
+			'add_new_item'               => sprintf( 'Add New %s', $this->tax_singular ),
+			'new_item_name'              => sprintf( 'New %s Name', $this->tax_singular ),
+			'separate_items_with_commas' => sprintf( 'Separate %s with commas', $this->tax_plural_low ),
+			'add_or_remove_items'        => sprintf( 'Add or remove %s', $this->tax_plural_low ),
+			'choose_from_most_used'      => sprintf( 'Choose from most used %s', $this->tax_plural_low ),
+			'view_item'                  => sprintf( 'View %s', $this->tax_singular )
 		);
 
 		# 'public' is a meta argument, set some defaults
@@ -97,9 +97,10 @@ class ExtendedTaxonomy {
 			$this->args['labels'] = wp_parse_args( $args['labels'], $this->defaults['labels'] );
 
 		if ( $this->args['exclusive'] or $this->args['meta_box'] )
-			add_action( 'add_meta_boxes', array( $this, '_meta_boxes' ), 10, 2 );
+			add_action( 'add_meta_boxes', array( $this, 'meta_boxes' ), 10, 2 );
 
-		add_action( 'init', array( $this, 'register_taxonomy' ), 9 );
+		add_action( 'init',                  array( $this, 'register_taxonomy' ), 9 );
+		add_filter( 'term_updated_messages', array( $this, 'term_updated_messages' ), 1, 2 );
 
 		#add_action( "manage_edit-{$this->taxonomy}_columns",          array( $this, '_cols' ) );
 		#add_action( "manage_{$this->taxonomy}_custom_column",         array( $this, '_col' ), 10, 3 );
@@ -107,7 +108,7 @@ class ExtendedTaxonomy {
 
 	}
 
-	function _meta_boxes( $post_type, $post ) {
+	function meta_boxes( $post_type, $post ) {
 
 		$taxos = get_post_taxonomies( $post );
 
@@ -121,7 +122,9 @@ class ExtendedTaxonomy {
 			if ( $this->args['meta_box'] ) {
 
 				if ( 'simple' == $this->args['meta_box'] )
-					$this->args['meta_box'] = array( $this, '_simple_meta_box' );
+					$this->args['meta_box'] = array( $this, 'meta_box_simple' );
+				else if ( 'radio' == $this->args['meta_box'] )
+					$this->args['meta_box'] = array( $this, 'meta_box_radio' );
 
 				if ( $this->args['exclusive'] )
 					add_meta_box( "{$this->taxonomy}div", $this->tax_singular, $this->args['meta_box'], $post_type, 'side' );
@@ -129,24 +132,24 @@ class ExtendedTaxonomy {
 					add_meta_box( "{$this->taxonomy}div", $this->tax_plural, $this->args['meta_box'], $post_type, 'side' );
 
 			} else {
-				add_meta_box( "{$this->taxonomy}div", $this->tax_singular, array( $this, '_radio_meta_box' ), $post_type, 'side' );
+				add_meta_box( "{$this->taxonomy}div", $this->tax_singular, array( $this, 'meta_box_radio' ), $post_type, 'side' );
 			}
 
 		}
 
 	}
 
-	function _radio_meta_box( $post, $box ) {
+	function meta_box_radio( $post, $box ) {
 		$walker = new Walker_ExtendedTaxonomyRadio;
-		$this->_do_meta_box( $post, $walker, true );
+		$this->do_meta_box( $post, $walker, true );
 	}
 
-	function _simple_meta_box( $post, $box ) {
+	function meta_box_simple( $post, $box ) {
 		$walker = new Walker_ExtendedTaxonomySimple;
-		$this->_do_meta_box( $post, $walker );
+		$this->do_meta_box( $post, $walker );
 	}
 
-	function _do_meta_box( $post, $walker, $show_none = false ) {
+	function do_meta_box( $post, $walker, $show_none = false ) {
 
 		$taxonomy = $this->taxonomy;
 		$tax      = get_taxonomy( $taxonomy );
@@ -203,6 +206,24 @@ class ExtendedTaxonomy {
 		</div>
 		<?php
 	
+	}
+
+	function term_updated_messages( $messages ) {
+
+		# http://core.trac.wordpress.org/ticket/18714
+
+		$messages[$this->taxonomy] = array(
+			0 => '',
+			1 => sprintf( '%s added.', $this->tax_singular ),
+			2 => sprintf( '%s deleted.', $this->tax_singular ),
+			3 => sprintf( '%s updated.', $this->tax_singular ),
+			4 => sprintf( '%s not added.', $this->tax_singular ),
+			5 => sprintf( '%s not updated.', $this->tax_singular ),
+			6 => sprintf( '%s deleted.', $this->tax_plural )
+		);
+
+		return $messages;
+
 	}
 
 	function register_taxonomy() {
@@ -292,7 +313,7 @@ class Walker_ExtendedTaxonomySimple extends Walker {
 
 }
 
-class Walker_ExtendedTaxonomyDropdown extends Walker {
+class Walker_ExtendedTaxonomyDropdownSlug extends Walker {
 
 	var $tree_type = 'category';
 	var $db_fields = array(
@@ -317,6 +338,7 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 		}
 		$output .= "</option>\n";
 	}
+
 }
 
 function register_extended_taxonomy( $taxonomy, $object_types, $args = array(), $plural = null ) {
