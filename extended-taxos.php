@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.5
+Version:      1.2.6
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -16,6 +16,7 @@ Extended Taxonomies provides better defaults so taxonomies can be created with v
  * Allow or prevent hierarchy within taxonomy (partial)
  * Custom meta box support
    - Built-in meta boxes for radios and checkboxes
+ * Easily add taxonomies to the Right Now dashboard widget
 
 
 */
@@ -98,6 +99,9 @@ class ExtendedTaxonomy {
 
 		if ( $this->args['exclusive'] or $this->args['meta_box'] )
 			add_action( 'add_meta_boxes', array( $this, 'meta_boxes' ), 10, 2 );
+
+		if ( isset( $this->args['right_now'] ) )
+			add_action( 'right_now_content_table_end', array( $this, 'right_now' ) );
 
 		add_action( 'init',                  array( $this, 'register_taxonomy' ), 9 );
 		add_filter( 'term_updated_messages', array( $this, 'term_updated_messages' ), 1, 2 );
@@ -208,6 +212,25 @@ class ExtendedTaxonomy {
 	
 	}
 
+	function right_now() {
+
+		$taxonomy = get_taxonomy( $this->taxonomy );
+		$count = wp_count_terms( $this->taxonomy );
+		$text  = $this->n( $taxonomy->labels->singular_name, $taxonomy->labels->name, $count );
+		$num   = number_format_i18n( $count );
+
+		if ( current_user_can( $taxonomy->cap->manage_terms ) ) {
+			$num  = '<a href="edit-tags.php?taxonomy=' . $this->taxonomy . '&amp;post_type=' . $taxonomy->object_type[0] . '">' . $num . '</a>';
+			$text = '<a href="edit-tags.php?taxonomy=' . $this->taxonomy . '&amp;post_type=' . $taxonomy->object_type[0] . '">' . $text . '</a>';
+		}
+
+		echo '<tr>';
+		echo '<td class="first b b-' . $this->taxonomy . '">' . $num . '</td>';
+		echo '<td class="t ' . $this->taxonomy . '">' . $text . '</td>';
+		echo '</tr>';
+
+	}
+
 	function term_updated_messages( $messages ) {
 
 		# http://core.trac.wordpress.org/ticket/18714
@@ -224,6 +247,11 @@ class ExtendedTaxonomy {
 
 		return $messages;
 
+	}
+
+	function n( $singular, $plural, $count ) {
+		# This is a non-localised version of _n()
+		return ( 1 == $count ) ? $singular : $plural;
 	}
 
 	function register_taxonomy() {
