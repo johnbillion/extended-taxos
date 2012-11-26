@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.2.9
+Version:      1.3
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 
@@ -243,6 +243,9 @@ class ExtendedTaxonomy {
 	 */
 	function meta_boxes( $post_type, $post ) {
 
+		if ( !isset( $post->post_type ) )
+			return;
+
 		$taxos = get_post_taxonomies( $post );
 
 		if ( in_array( $this->taxonomy, $taxos ) ) {
@@ -457,7 +460,10 @@ class ExtendedTaxonomy {
 	 */
 	function register_taxonomy() {
 
-		register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
+		if ( 'type' == $this->taxonomy )
+			trigger_error( sprintf( __( '"%s" is not allowed as a taxonomy name', 'extended_taxonomies' ), 'type' ), E_USER_ERROR );
+		else
+			register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
 
 	}
 
