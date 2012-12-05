@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.4.1
+Version:      1.4.2
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 License:      GPL v2 or later
@@ -408,7 +408,7 @@ class ExtendedTaxonomy {
 						wp_terms_checklist( $post->ID, array(
 							'taxonomy'      => $taxonomy,
 							'walker'        => $walker,
-							'selected'      => $selected,
+							'selected_cats' => $selected,
 							'checked_ontop' => $this->args['checked_ontop']
 						) );
 
@@ -425,9 +425,9 @@ class ExtendedTaxonomy {
 							else
 								$_selected = $selected;
 							$args = array(
-								'taxonomy' => $taxonomy,
-								'selected' => $_selected,
-								'disabled' => false
+								'taxonomy'      => $taxonomy,
+								'selected_cats' => $_selected,
+								'disabled'      => false
 							);
 							$walker->start_el( $output, $o, 1, $args );
 							$walker->end_el( $output, $o, 1, $args );
@@ -617,7 +617,7 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 			'<label class="selectit">' .
 			'<input value="' . $value . '" type="checkbox" name="tax_input[' . $args['taxonomy'] . '][]" ' .
 				'id="in-'.$args['taxonomy'].'-' . $term->term_id . '"' .
-				checked( in_array( $term->term_id, (array) $args['selected'] ), true, false ) .
+				checked( in_array( $term->term_id, (array) $args['selected_cats'] ), true, false ) .
 				disabled( empty( $args['disabled'] ), false, false ) .
 			' /> ' .
 			esc_html( apply_filters( 'the_category', $term->name ) ) .
@@ -708,7 +708,7 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 			'<label class="selectit">' .
 			'<input value="' . $value . '" type="radio" name="tax_input[' . $args['taxonomy'] . '][]" ' .
 				'id="in-'.$args['taxonomy'].'-' . $term->term_id . '"' .
-				checked( in_array( $term->term_id, (array) $args['selected'] ), true, false ) .
+				checked( in_array( $term->term_id, (array) $args['selected_cats'] ), true, false ) .
 				disabled( empty( $args['disabled'] ), false, false ) .
 			' /> ' .
 			esc_html( apply_filters( 'the_category', $term->name ) ) .
@@ -726,45 +726,6 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 	 */
 	function end_el( &$output, $term, $depth, $args ) {
 		$output .= "</li>\n";
-	}
-
-}
-
-/**
- * A term walker class for a dropdown menu with slugs for option values.
- *
- */
-class Walker_ExtendedTaxonomyDropdownSlug extends Walker {
-
-	/**
-	 * Some member variables you don't need to worry too much about:
-	 */
-	var $tree_type = 'category';
-	var $db_fields = array(
-		'parent' => 'parent',
-		'id' => 'term_id'
-	);
-
-	/**
-	 * Start the element output.
-	 *
-	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param object $term Term data object.
-	 * @param int $depth Depth of term in reference to parents.
-	 * @param array $args Optional arguments.
-	 */
-	function start_el( &$output, $term, $depth, $args ) {
-		$pad = str_repeat( '&nbsp;', $depth * 3 );
-
-		$cat_name = apply_filters( 'list_cats', $term->name, $term );
-		$output .= "\t<option class=\"level-$depth\" value=\"".$term->slug."\"";
-		if ( $term->slug == $args['selected'] )
-			$output .= ' selected="selected"';
-		$output .= '>';
-		$output .= $pad.$cat_name;
-		if ( $args['show_count'] )
-			$output .= '&nbsp;&nbsp;('. number_format_i18n( $term->count ) .')';
-		$output .= "</option>\n";
 	}
 
 }
