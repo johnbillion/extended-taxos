@@ -2,12 +2,12 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.4
+Version:      1.4.1
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 License:      GPL v2 or later
 
-Copyright © 2012 John Blackbourn
+Copyright Â© 2012 John Blackbourn
 
 Extended Taxonomies provides extended functionality to custom taxonomies in WordPress, allowing you to quickly build custom taxonomies without having to write the same code again and again.
 
@@ -67,7 +67,7 @@ class ExtendedTaxonomy {
 		'right_now'         => false, # Custom arg
 		'exclusive'         => false, # Custom arg
 		'allow_hierarchy'   => false, # Custom arg
-		'checked_ontop'     => true,  # Custom arg
+		'checked_ontop'     => null,  # Custom arg
 	);
 
 	/**
@@ -201,6 +201,10 @@ class ExtendedTaxonomy {
 		# Merge our args with the defaults:
 		$this->args = wp_parse_args( $args, $this->defaults );
 
+		# Only set checked on top to true if we're using the default meta box:
+		if ( null === $this->args['checked_ontop'] )
+			$this->args['checked_ontop'] = ( !$this->args['exclusive'] and !$this->args['meta_box'] );
+
 		# This allows the 'labels' arg to contain some, none or all labels:
 		if ( isset( $args['labels'] ) )
 			$this->args['labels'] = wp_parse_args( $args['labels'], $this->defaults['labels'] );
@@ -288,7 +292,7 @@ class ExtendedTaxonomy {
 	/**
 	 * Display the 'radio' meta box on the post editing screen.
 	 *
-	 * Uses the Walker_ExtendedTaxonomyRadio class for the walker.
+	 * Uses the Walker_ExtendedTaxonomyRadios class for the walker.
 	 *
 	 * @param object $post The post object
 	 * @param array $meta_box The meta box arguments
@@ -296,7 +300,7 @@ class ExtendedTaxonomy {
 	 */
 	function meta_box_radio( $post, $meta_box ) {
 
-		$walker = new Walker_ExtendedTaxonomyRadio;
+		$walker = new Walker_ExtendedTaxonomyRadios;
 		$this->do_meta_box( $post, $walker, true, 'checklist' );
 
 	}
@@ -396,11 +400,15 @@ class ExtendedTaxonomy {
 					<ul id="<?php echo $taxonomy; ?>checklist" class="list:<?php echo $taxonomy; ?> categorychecklist form-no-clear">
 						<?php
 
+						# Standard WP Walker_Category_Checklist does not cut it
+						if ( empty( $walker ) or !is_a( $walker, 'Walker' ) )
+							$walker = new Walker_ExtendedTaxonomyCheckboxes;
+
 						# Output the terms:
 						wp_terms_checklist( $post->ID, array(
 							'taxonomy'      => $taxonomy,
 							'walker'        => $walker,
-							'selected_cats' => $selected,
+							'selected'      => $selected,
 							'checked_ontop' => $this->args['checked_ontop']
 						) );
 
@@ -417,10 +425,9 @@ class ExtendedTaxonomy {
 							else
 								$_selected = $selected;
 							$args = array(
-								'taxonomy'      => $taxonomy,
-								'popular_cats'  => array(),
-								'selected_cats' => $_selected,
-								'disabled'      => false
+								'taxonomy' => $taxonomy,
+								'selected' => $_selected,
+								'disabled' => false
 							);
 							$walker->start_el( $output, $o, 1, $args );
 							$walker->end_el( $output, $o, 1, $args );
@@ -522,7 +529,14 @@ class ExtendedTaxonomy {
 	 */
 	function register_taxonomy() {
 
-		if ( in_array( $this->taxonomy, array( 'type', 'tab' ) ) )
+		if ( true === $this->args['query_var'] )
+			$query_var = $this->taxonomy;
+		else
+			$query_var = $this->args['query_var'];
+
+		if ( $query_var and count( get_post_types( array( 'query_var' => $query_var ) ) ) )
+			trigger_error( sprintf( __( 'Taxonomy query var "%s" clashes with a post type query var of the same name', 'ext_taxos' ), $query_var ), E_USER_ERROR );
+		else if ( in_array( $this->taxonomy, array( 'type', 'tab' ) ) )
 			trigger_error( sprintf( __( '"%s" is not allowed as a taxonomy name', 'ext_taxos' ), $this->taxonomy ), E_USER_ERROR );
 		else
 			register_taxonomy( $this->taxonomy, $this->object_types, $this->args );
@@ -532,10 +546,12 @@ class ExtendedTaxonomy {
 }
 
 /**
- * A term walker class for radio buttons.
+ * Walker to output an unordered list of category checkbox <input> elements properly.
  *
+ * @see Walker_Category_Checklist
+ * @see Walker
  */
-class Walker_ExtendedTaxonomyRadio extends Walker {
+class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 
 	/**
 	 * Some member variables you don't need to worry too much about:
@@ -545,6 +561,104 @@ class Walker_ExtendedTaxonomyRadio extends Walker {
 		'parent' => 'parent',
 		'id'     => 'term_id'
 	);
+	var $field = null;
+
+	function __construct( $args = null ) {
+		if ( $args and isset( $args['field'] ) )
+			$this->field = $args['field'];
+	}
+
+	/**
+	 * Starts the list before the elements are added.
+	 *
+	 * @param string $output Passed by reference. Used to append additional content.
+	 * @param int $depth Depth of term in reference to parents.
+	 * @param array $args Optional arguments.
+	 */
+	function start_lvl( &$output, $depth = 0, $args = array() ) {
+		$indent = str_repeat( "\t", $depth );
+		$output .= "$indent<ul class='children'>\n";
+	}
+
+	/**
+	 * Ends the list of after the elements are added.
+	 *
+	 * @param string $output Passed by reference. Used to append additional content.
+	 * @param int $depth Depth of term in reference to parents.
+	 * @param array $args Optional arguments.
+	 */
+	function end_lvl( &$output, $depth = 0, $args = array() ) {
+		$indent = str_repeat( "\t", $depth );
+		$output .= "$indent</ul>\n";
+	}
+
+	/**
+	 * Start the element output.
+	 *
+	 * @param string $output Passed by reference. Used to append additional content.
+	 * @param object $term Term data object.
+	 * @param int $depth Depth of term in reference to parents.
+	 * @param array $args Optional arguments.
+	 * @param unknown $id @TODO
+	 */
+	function start_el( &$output, $term, $depth, $args, $id = 0 ) {
+
+		$tax = get_taxonomy( $args['taxonomy'] );
+
+		if ( $this->field )
+			$value = $term->{$this->field};
+		else
+			$value = $tax->hierarchical ? $term->term_id : $term->name;
+
+		if ( empty( $term->term_id ) and !$tax->hierarchical )
+			$value = '';
+
+		$output .= "\n<li id='{$args['taxonomy']}-{$term->term_id}'>" .
+			'<label class="selectit">' .
+			'<input value="' . $value . '" type="checkbox" name="tax_input[' . $args['taxonomy'] . '][]" ' .
+				'id="in-'.$args['taxonomy'].'-' . $term->term_id . '"' .
+				checked( in_array( $term->term_id, (array) $args['selected'] ), true, false ) .
+				disabled( empty( $args['disabled'] ), false, false ) .
+			' /> ' .
+			esc_html( apply_filters( 'the_category', $term->name ) ) .
+			'</label>';
+
+	}
+
+	/**
+	 * Ends the element output, if needed.
+	 *
+	 * @param string $output Passed by reference. Used to append additional content.
+	 * @param object $term Term data object.
+	 * @param int $depth Depth of term in reference to parents.
+	 * @param array $args Optional arguments.
+	 */
+	function end_el( &$output, $term, $depth = 0, $args = array() ) {
+		$output .= "</li>\n";
+	}
+
+}
+
+/**
+ * A term walker class for radio buttons.
+ *
+ */
+class Walker_ExtendedTaxonomyRadios extends Walker {
+
+	/**
+	 * Some member variables you don't need to worry too much about:
+	 */
+	var $tree_type = 'category';
+	var $db_fields = array(
+		'parent' => 'parent',
+		'id'     => 'term_id'
+	);
+	var $field = null;
+
+	function __construct( $args = null ) {
+		if ( $args and isset( $args['field'] ) )
+			$this->field = $args['field'];
+	}
 
 	/**
 	 * Starts the list before the elements are added.
@@ -580,12 +694,21 @@ class Walker_ExtendedTaxonomyRadio extends Walker {
 	 */
 	function start_el( &$output, $term, $depth, $args ) {
 
-		$name = 'tax_input[' . $args['taxonomy'] . ']';
+		$tax = get_taxonomy( $args['taxonomy'] );
+
+		if ( $this->field )
+			$value = $term->{$this->field};
+		else
+			$value = $tax->hierarchical ? $term->term_id : $term->name;
+
+		if ( empty( $term->term_id ) and !$tax->hierarchical )
+			$value = '';
+
 		$output .= "\n<li id='{$args['taxonomy']}-{$term->term_id}'>" .
 			'<label class="selectit">' .
-			'<input value="' . $term->term_id . '" type="radio" name="'.$name.'[]" ' .
+			'<input value="' . $value . '" type="radio" name="tax_input[' . $args['taxonomy'] . '][]" ' .
 				'id="in-'.$args['taxonomy'].'-' . $term->term_id . '"' .
-				checked( in_array( $term->term_id, $args['selected_cats'] ), true, false ) .
+				checked( in_array( $term->term_id, (array) $args['selected'] ), true, false ) .
 				disabled( empty( $args['disabled'] ), false, false ) .
 			' /> ' .
 			esc_html( apply_filters( 'the_category', $term->name ) ) .
@@ -640,12 +763,11 @@ class Walker_ExtendedTaxonomyDropdownSlug extends Walker {
 		$output .= '>';
 		$output .= $pad.$cat_name;
 		if ( $args['show_count'] )
-			$output .= '&nbsp;&nbsp;('. $term->count .')';
+			$output .= '&nbsp;&nbsp;('. number_format_i18n( $term->count ) .')';
 		$output .= "</option>\n";
 	}
 
 }
-
 
 /**
  * A term walker class for a dropdown menu.
@@ -661,6 +783,12 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 		'parent' => 'parent',
 		'id' => 'term_id'
 	);
+	var $field = null;
+
+	function __construct( $args = null ) {
+		if ( $args and isset( $args['field'] ) )
+			$this->field = $args['field'];
+	}
 
 	/**
 	 * Start the element output.
@@ -671,16 +799,30 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 	 * @param array $args Optional arguments.
 	 */
 	function start_el( &$output, $term, $depth, $args ) {
+
 		$pad = str_repeat( '&nbsp;', $depth * 3 );
+		$tax = get_taxonomy( $args['taxonomy'] );
+
+		if ( $this->field )
+			$value = $term->{$this->field};
+		else
+			$value = $tax->hierarchical ? $term->term_id : $term->name;
+
+		if ( empty( $term->term_id ) and !$tax->hierarchical )
+			$value = '';
 
 		$cat_name = apply_filters( 'list_cats', $term->name, $term );
-		$output .= "\t<option class=\"level-$depth\" value=\"".$term->term_id."\"";
-		if ( in_array( $term->term_id, $args['selected'] ) )
+		$output .= "\t<option class=\"level-$depth\" value=\"".esc_attr($value)."\"";
+
+		if ( isset( $args['selected_cats'] ) and in_array( $value, (array) $args['selected_cats'] ) )
 			$output .= ' selected="selected"';
+		else if ( isset( $args['selected'] ) and in_array( $term->term_id, (array) $args['selected'] ) )
+			$output .= ' selected="selected"';
+
 		$output .= '>';
 		$output .= $pad.$cat_name;
 		if ( $args['show_count'] )
-			$output .= '&nbsp;&nbsp;('. $term->count .')';
+			$output .= '&nbsp;&nbsp;('. number_format_i18n( $term->count ) .')';
 		$output .= "</option>\n";
 	}
 
