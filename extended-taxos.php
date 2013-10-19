@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.5-beta1
+Version:      1.5
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 License:      GPL v2 or later
@@ -549,9 +549,6 @@ class Extended_Taxonomy_Admin {
 	/**
 	 * Add our term updated messages.
 	 *
-	 * These messages are not yet in WordPress core.
-	 * @see http://core.trac.wordpress.org/ticket/18714
-	 *
 	 * The messages are as follows:
 	 *
 	 *   1 => "Term added."
@@ -650,13 +647,13 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 	/**
 	 * Start the element output.
 	 *
-	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param object $object Term data object.
-	 * @param int    $depth  Depth of term in reference to parents.
-	 * @param array  $args   Optional arguments.
-	 * @param int    $id     Current object ID.
+	 * @param string $output            Passed by reference. Used to append additional content.
+	 * @param object $object            Term data object.
+	 * @param int    $depth             Depth of term in reference to parents.
+	 * @param array  $args              Optional arguments.
+	 * @param int    $current_object_id Current object ID.
 	 */
-	function start_el( &$output, $object, $depth, $args, $id = 0 ) {
+	function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 )  {
 
 		$tax = get_taxonomy( $args['taxonomy'] );
 
@@ -748,12 +745,13 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 	/**
 	 * Start the element output.
 	 *
-	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param object $object Term data object.
-	 * @param int    $depth  Depth of term in reference to parents.
-	 * @param array  $args   Optional arguments.
+	 * @param string $output            Passed by reference. Used to append additional content.
+	 * @param object $object            Term data object.
+	 * @param int    $depth             Depth of term in reference to parents.
+	 * @param array  $args              Optional arguments.
+	 * @param int    $current_object_id Current object ID.
 	 */
-	function start_el( &$output, $object, $depth, $args, $current_object_id = 0 ) {
+	function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 )  {
 
 		$tax = get_taxonomy( $args['taxonomy'] );
 
@@ -821,12 +819,13 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 	/**
 	 * Start the element output.
 	 *
-	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param object $object Term data object.
-	 * @param int    $depth  Depth of term in reference to parents.
-	 * @param array  $args   Optional arguments.
+	 * @param string $output            Passed by reference. Used to append additional content.
+	 * @param object $object            Term data object.
+	 * @param int    $depth             Depth of term in reference to parents.
+	 * @param array  $args              Optional arguments.
+	 * @param int    $current_object_id Current object ID.
 	 */
-	function start_el( &$output, $object, $depth, $args, $current_object_id = 0 ) {
+	function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 )  {
 
 		$pad = str_repeat( '&nbsp;', $depth * 3 );
 		$tax = get_taxonomy( $args['taxonomy'] );
