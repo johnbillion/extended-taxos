@@ -2,7 +2,7 @@
 /*
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
-Version:      1.5
+Version:      1.5.1
 Author:       John Blackbourn
 Author URI:   http://johnblackbourn.com
 License:      GPL v2 or later
@@ -303,16 +303,18 @@ class Extended_Taxonomy_Admin {
 	/**
 	 * Remove the default meta box from the post editing screen and add our custom meta box.
 	 *
-	 * @param string  $post_type The post type
-	 * @param WP_Post $post      The post object
+	 * @param string $object_type The object type (eg. the post type)
+	 * @param mixed  $object      The object (eg. a WP_Post object)
 	 * @return null
 	 */
-	function meta_boxes( $post_type, WP_Post $post ) {
+	function meta_boxes( $object_type, $object ) {
 
-		if ( !isset( $post->post_type ) )
+		if ( !is_a( $object, 'WP_Post' ) )
 			return;
 
-		$taxos = get_post_taxonomies( $post );
+		$post_type = $object_type;
+		$post      = $object;
+		$taxos     = get_post_taxonomies( $post );
 
 		if ( in_array( $this->taxo->taxonomy, $taxos ) ) {
 
