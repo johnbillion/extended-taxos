@@ -705,7 +705,7 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
  *
  * @uses Walker
  */
-if ( class_exists( 'Walker_ExtendedTaxonomyRadios' ) ) :
+if ( class_exists( 'Walker_ExtendedTaxonomyRadios' ) ) {
 class Walker_ExtendedTaxonomyRadios extends Walker {
 
 	/**
