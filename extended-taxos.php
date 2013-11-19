@@ -45,7 +45,7 @@ GNU General Public License for more details.
  * Wrapper function for instantiating a new ExtendedTaxonomy object. This is the only function you need.
  * See the Extended_Taxonomy class for parameters.
  */
-if ( function_exists( 'register_extended_taxonomy' ) ) {
+if ( !function_exists( 'register_extended_taxonomy' ) ) {
 function register_extended_taxonomy( $taxonomy, $object_type, array $args = null, $names = null ) {
 
 	$fga = func_get_args();
@@ -72,7 +72,7 @@ function register_extended_taxonomy( $taxonomy, $object_type, array $args = null
 }
 }
 
-if ( class_exists( 'Extended_Taxonomy' ) ) {
+if ( !class_exists( 'Extended_Taxonomy' ) ) {
 class Extended_Taxonomy {
 
 	/**
@@ -243,7 +243,7 @@ class Extended_Taxonomy {
 }
 }
 
-if ( class_exists( 'Extended_Taxonomy_Admin' ) ) {
+if ( !class_exists( 'Extended_Taxonomy_Admin' ) ) {
 class Extended_Taxonomy_Admin {
 
 	/**
@@ -605,7 +605,7 @@ class Extended_Taxonomy_Admin {
  *
  * @uses Walker
  */
-if ( class_exists( 'Walker_ExtendedTaxonomyCheckboxes' ) ) {
+if ( !class_exists( 'Walker_ExtendedTaxonomyCheckboxes' ) ) {
 class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 
 	/**
@@ -705,7 +705,7 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
  *
  * @uses Walker
  */
-if ( class_exists( 'Walker_ExtendedTaxonomyRadios' ) ) {
+if ( !class_exists( 'Walker_ExtendedTaxonomyRadios' ) ) {
 class Walker_ExtendedTaxonomyRadios extends Walker {
 
 	/**
@@ -805,7 +805,7 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
  *
  * @uses Walker
  */
-if ( class_exists( 'Walker_ExtendedTaxonomyDropdown' ) ) {
+if ( !class_exists( 'Walker_ExtendedTaxonomyDropdown' ) ) {
 class Walker_ExtendedTaxonomyDropdown extends Walker {
 
 	/**
