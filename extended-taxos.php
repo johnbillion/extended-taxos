@@ -1,13 +1,13 @@
 <?php
 /*
-Plugin Name:  Extended Taxonomies
-Description:  Extended custom taxonomies.
-Version:      1.5.1
-Author:       John Blackbourn
-Author URI:   http://johnblackbourn.com
-License:      GPL v2 or later
+Plugin Name: Extended Taxonomies
+Description: Extended custom taxonomies.
+Version:     1.5.2
+Author:      John Blackbourn
+Author URI:  https://johnblackbourn.com
+License:     GPL v2 or later
 
-Copyright © 2013 John Blackbourn
+Copyright © 2014 John Blackbourn
 
 Extended Taxonomies provides extended functionality to custom taxonomies in WordPress, allowing you to quickly build custom taxonomies without having to write the same code again and again.
 
