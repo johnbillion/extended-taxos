@@ -596,6 +596,13 @@ class Extended_Taxonomy_Admin {
 }
 
 /**
+ *  If the walker class doesn't exist, stop execution 
+ */
+if(!class_exists('Walker')){
+    return;
+}
+
+/**
  * Walker to output an unordered list of category checkbox <input> elements properly.
  *
  * @uses Walker
