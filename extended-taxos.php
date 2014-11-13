@@ -142,7 +142,7 @@ class Extended_Taxonomy {
 		 * Filter the arguments for this taxonomy.
 		 *
 		 * @since 1.5.5
-		 * @param array $args The post type arguments.
+		 * @param array $args The taxonomy arguments.
 		 */
 		$args  = apply_filters( "ext-taxos/{$taxonomy}/args", $args );
 		/**
