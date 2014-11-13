@@ -40,6 +40,7 @@ GNU General Public License for more details.
 
 */
 
+if ( ! function_exists( 'register_extended_taxonomy' ) ) :
 
 /**
  * Wrapper function for instantiating a new ExtendedTaxonomy object. This is the only function you need.
@@ -856,3 +857,5 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 	}
 
 }
+
+endif;
