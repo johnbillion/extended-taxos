@@ -3,30 +3,14 @@
 Plugin Name:  Extended Taxonomies
 Description:  Extended custom taxonomies.
 Version:      1.5.4
+Plugin URI:   https://github.com/johnbillion/extended-taxos
 Author:       John Blackbourn
-Author URI:   http://johnblackbourn.com
+Author URI:   https://johnblackbourn.com
+Text Domain:  extended-taxos
+Domain Path:  /languages/
 License:      GPL v2 or later
 
-Copyright © 2014 John Blackbourn
-
-Extended Taxonomies provides extended functionality to custom taxonomies in WordPress, allowing you to quickly build custom taxonomies without having to write the same code again and again.
-
-= Improved defaults =
-
- * Public taxonomy with admin UI enabled
- * Intelligent values for labels and term updated messages
- * Hierarchical
- * Drop with_front from rewrite rules
-
-= Extended features =
-
- * Custom meta box support
-   - Built-in meta boxes for radio buttons, dropdowns and simplified checkboxes
- * Add taxonomies to the 'Right Now' section on the dashboard
- * Allow object terms to be exclusive (partial)
- * Allow or prevent hierarchy within taxonomy (partial)
-
-= License =
+Copyright © 2012-2015 John Blackbourn
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,7 +23,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 */
-
 
 /**
  * Wrapper function for instantiating a new ExtendedTaxonomy object. This is the only function you need.
