@@ -173,11 +173,12 @@ class Extended_Taxonomy {
 		}
 
 		# Merge our args with the defaults:
-		$this->args = wp_parse_args( $args, $this->defaults );
+		$this->args = array_merge( $this->defaults, $args );
 
 		# This allows the 'labels' arg to contain some, none or all labels:
-		if ( isset( $args['labels'] ) )
-			$this->args['labels'] = wp_parse_args( $args['labels'], $this->defaults['labels'] );
+		if ( isset( $args['labels'] ) ) {
+			$this->args['labels'] = array_merge( $this->defaults['labels'], $args['labels'] );
+		}
 
 		# Register taxonomy when WordPress initialises:
 		if ( 'init' === current_filter() ) {
@@ -257,7 +258,7 @@ class Extended_Taxonomy_Admin {
 		$this->taxo = $taxo;
 
 		# Merge our args with the defaults:
-		$this->args = wp_parse_args( $args, $this->defaults );
+		$this->args = array_merge( $this->defaults, $args );
 
 		# Set checked on top to false unless we're using the default meta box:
 		if ( null === $this->args['checked_ontop'] ) {
