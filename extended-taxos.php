@@ -416,7 +416,7 @@ class Extended_Taxonomy_Admin {
 		}
 
 		?>
-		<div id="taxonomy-<?php echo $taxonomy; ?>" class="categorydiv">
+		<div id="taxonomy-<?php echo esc_attr( $taxonomy ); ?>" class="categorydiv">
 
 			<?php
 
@@ -445,16 +445,16 @@ class Extended_Taxonomy_Admin {
 					?>
 					<style type="text/css">
 						/* Style for the 'none' item: */
-						#<?php echo $taxonomy; ?>-0 {
+						#<?php echo esc_attr( $taxonomy ); ?>-0 {
 							color: #888;
 							border-top: 1px solid #eee;
 							margin-top: 5px;
 						}
 					</style>
 
-					<input type="hidden" name="tax_input[<?php echo $taxonomy; ?>][]" value="0" />
+					<input type="hidden" name="tax_input[<?php echo esc_attr( $taxonomy ); ?>][]" value="0" />
 
-					<ul id="<?php echo $taxonomy; ?>checklist" class="list:<?php echo $taxonomy; ?> categorychecklist form-no-clear">
+					<ul id="<?php echo esc_attr( $taxonomy ); ?>checklist" class="list:<?php echo esc_attr( $taxonomy ); ?> categorychecklist form-no-clear">
 						<?php
 
 						# Standard WP Walker_Category_Checklist does not cut it
@@ -490,7 +490,7 @@ class Extended_Taxonomy_Admin {
 							);
 							$walker->start_el( $output, $o, 1, $args );
 							$walker->end_el( $output, $o, 1, $args );
-							echo $output;
+							echo $output; // WPCS: XSS ok.
 						}
 
 						?>
@@ -528,8 +528,8 @@ class Extended_Taxonomy_Admin {
 		}
 
 		echo '<tr>';
-		echo '<td class="first b b-' . $this->taxo->taxonomy . '">' . $num . '</td>';
-		echo '<td class="t ' . $this->taxo->taxonomy . '">' . $text . '</td>';
+		echo '<td class="first b b-' . esc_attr( $this->taxo->taxonomy ) . '">' . $num . '</td>';
+		echo '<td class="t ' . esc_attr( $this->taxo->taxonomy ) . '">' . $text . '</td>';
 		echo '</tr>';
 
 	}
@@ -762,8 +762,8 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 
 		$output .= "\n<li id='{$args['taxonomy']}-{$object->term_id}'>" .
 			'<label class="selectit">' .
-			'<input value="' . $value . '" type="radio" name="tax_input[' . $args['taxonomy'] . '][]" ' .
-				'id="in-'.$args['taxonomy'].'-' . $object->term_id . '"' .
+			'<input value="' . esc_attr( $value ) . '" type="radio" name="tax_input[' . esc_attr( $args['taxonomy'] ) . '][]" ' .
+				'id="in-' . esc_attr( $args['taxonomy'] ) . '-' . esc_attr( $object->term_id ) . '"' .
 				checked( in_array( $object->term_id, (array) $args['selected_cats'] ), true, false ) .
 				disabled( empty( $args['disabled'] ), false, false ) .
 			' /> ' .
@@ -850,9 +850,10 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 		}
 
 		$output .= '>';
-		$output .= $pad.$cat_name;
-		if ( $args['show_count'] )
+		$output .= $pad . esc_html( $cat_name );
+		if ( $args['show_count'] ) {
 			$output .= '&nbsp;&nbsp;('. number_format_i18n( $object->count ) .')';
+		}
 		$output .= "</option>\n";
 	}
 
