@@ -33,15 +33,16 @@ function register_extended_taxonomy( $taxonomy, $object_type, array $args = arra
 
 	$taxo = new Extended_Taxonomy( $taxonomy, $object_type, $args, $names );
 
-	if ( is_admin() )
+	if ( is_admin() ) {
 		new Extended_Taxonomy_Admin( $taxo, $args );
+	}
 
 	return $taxo;
 
 }
 }
 
-if ( !class_exists( 'Extended_Taxonomy' ) ) {
+if ( ! class_exists( 'Extended_Taxonomy' ) ) {
 class Extended_Taxonomy {
 
 	/**
@@ -110,22 +111,25 @@ class Extended_Taxonomy {
 	 */
 	public function __construct( $taxonomy, $object_type, array $args = array(), array $names = array() ) {
 
-		if ( isset( $names['singular'] ) )
+		if ( isset( $names['singular'] ) ) {
 			$this->tax_singular = $names['singular'];
-		else
+		} else {
 			$this->tax_singular = ucwords( str_replace( array( '-', '_' ), ' ', $taxonomy ) );
+		}
 
-		if ( isset( $names['slug'] ) )
+		if ( isset( $names['slug'] ) ) {
 			$this->tax_slug = $names['slug'];
-		else if ( isset( $names['plural'] ) )
+		} elseif ( isset( $names['plural'] ) ) {
 			$this->tax_slug = $names['plural'];
-		else
+		} else {
 			$this->tax_slug = $taxonomy . 's';
+		}
 
-		if ( isset( $names['plural'] ) )
+		if ( isset( $names['plural'] ) ) {
 			$this->tax_plural = $names['plural'];
-		else
+		} else {
 			$this->tax_plural = ucwords( str_replace( array( '-', '_' ), ' ', $this->tax_slug ) );
+		}
 
 		$this->object_type = (array) $object_type;
 		$this->taxonomy    = strtolower( $taxonomy );
@@ -153,23 +157,17 @@ class Extended_Taxonomy {
 			'separate_items_with_commas' => sprintf( 'Separate %s with commas', $this->tax_plural_low ),
 			'add_or_remove_items'        => sprintf( 'Add or remove %s', $this->tax_plural_low ),
 			'choose_from_most_used'      => sprintf( 'Choose from most used %s', $this->tax_plural_low ),
-			'no_item'                    => sprintf( 'No %s', $this->tax_singular ) # Custom label
+			'no_item'                    => sprintf( 'No %s', $this->tax_singular ), # Custom label
 		);
 
-		# 'public' is a meta argument, so set some defaults if it's present:
-		if ( isset( $args['public'] ) ) {
-			$this->defaults['show_in_nav_menus'] = $args['public'];
-			$this->defaults['show_ui']           = $args['public'];
-		}
-
 		# Only set rewrites if we need them
-		if ( ( isset( $args['public'] ) and !$args['public'] ) or ( !$this->defaults['public'] ) ) {
+		if ( isset( $args['public'] ) && ! $args['public'] ) {
 			$this->defaults['rewrite'] = false;
 		} else {
 			$this->defaults['rewrite'] = array(
 				'slug'         => $this->tax_slug,
 				'with_front'   => false,
-				'hierarchical' => isset( $args['allow_hierarchy'] ) ? $args['allow_hierarchy'] : $this->defaults['allow_hierarchy']
+				'hierarchical' => isset( $args['allow_hierarchy'] ) ? $args['allow_hierarchy'] : $this->defaults['allow_hierarchy'],
 			);
 		}
 
@@ -181,10 +179,11 @@ class Extended_Taxonomy {
 			$this->args['labels'] = wp_parse_args( $args['labels'], $this->defaults['labels'] );
 
 		# Register taxonomy when WordPress initialises:
-		if ( 'init' === current_filter() )
+		if ( 'init' === current_filter() ) {
 			call_user_func( array( $this, 'register_taxonomy' ) );
-		else
+		} else {
 			add_action( 'init', array( $this, 'register_taxonomy' ), 9 );
+		}
 
 	}
 
@@ -193,26 +192,28 @@ class Extended_Taxonomy {
 	 *
 	 * @return null
 	 */
-	function register_taxonomy() {
+	public function register_taxonomy() {
 
-		if ( true === $this->args['query_var'] )
+		if ( true === $this->args['query_var'] ) {
 			$query_var = $this->taxonomy;
-		else
+		} else {
 			$query_var = $this->args['query_var'];
+		}
 
-		if ( $query_var and count( get_post_types( array( 'query_var' => $query_var ) ) ) )
+		if ( $query_var && count( get_post_types( array( 'query_var' => $query_var ) ) ) ) {
 			trigger_error( sprintf( __( 'Taxonomy query var "%s" clashes with a post type query var of the same name', 'ext_taxos' ), $query_var ), E_USER_ERROR );
-		else if ( in_array( $query_var, array( 'type', 'tab' ) ) )
+		} elseif ( in_array( $query_var, array( 'type', 'tab' ) ) ) {
 			trigger_error( sprintf( __( 'Taxonomy query var "%s" is not allowed', 'ext_taxos' ), $query_var ), E_USER_ERROR );
-		else
+		} else {
 			register_taxonomy( $this->taxonomy, $this->object_type, $this->args );
+		}
 
 	}
 
 }
 }
 
-if ( !class_exists( 'Extended_Taxonomy_Admin' ) ) {
+if ( ! class_exists( 'Extended_Taxonomy_Admin' ) ) {
 class Extended_Taxonomy_Admin {
 
 	/**
@@ -258,16 +259,19 @@ class Extended_Taxonomy_Admin {
 		$this->args = wp_parse_args( $args, $this->defaults );
 
 		# Set checked on top to false unless we're using the default meta box:
-		if ( null === $this->args['checked_ontop'] )
+		if ( null === $this->args['checked_ontop'] ) {
 			$this->args['checked_ontop'] = empty( $this->args['meta_box'] );
+		}
 
 		# Meta boxes:
-		if ( $this->taxo->args['exclusive'] or isset( $this->args['meta_box'] ) )
+		if ( $this->taxo->args['exclusive'] || isset( $this->args['meta_box'] ) ) {
 			add_action( 'add_meta_boxes', array( $this, 'meta_boxes' ), 10, 2 );
+		}
 
 		# 'Right Now' dashboard widget:
-		if ( $this->args['right_now'] )
+		if ( $this->args['right_now'] ) {
 			add_action( 'right_now_content_table_end', array( $this, 'right_now' ) );
+		}
 
 		# Term updated messages:
 		add_filter( 'term_updated_messages', array( $this, 'term_updated_messages' ), 1, 2 );
@@ -281,10 +285,11 @@ class Extended_Taxonomy_Admin {
 	 * @param mixed  $object      The object (eg. a WP_Post object)
 	 * @return null
 	 */
-	function meta_boxes( $object_type, $object ) {
+	public function meta_boxes( $object_type, $object ) {
 
-		if ( !is_a( $object, 'WP_Post' ) )
+		if ( ! is_a( $object, 'WP_Post' ) ) {
 			return;
+		}
 
 		$post_type = $object_type;
 		$post      = $object;
@@ -295,37 +300,41 @@ class Extended_Taxonomy_Admin {
 			$tax = get_taxonomy( $this->taxo->taxonomy );
 
 			# Remove default meta box:
-			if ( $this->taxo->args['hierarchical'] )
+			if ( $this->taxo->args['hierarchical'] ) {
 				remove_meta_box( "{$this->taxo->taxonomy}div", $post_type, 'side' );
-			else
+			} else {
 				remove_meta_box( "tagsdiv-{$this->taxo->taxonomy}", $post_type, 'side' );
+			}
 
-			if ( !current_user_can( $tax->cap->assign_terms ) )
+			if ( ! current_user_can( $tax->cap->assign_terms ) ) {
 				return;
+			}
 
 			if ( $this->args['meta_box'] ) {
 
 				# Set the 'meta_box' argument to the actual meta box callback function name:
 				if ( 'simple' == $this->args['meta_box'] ) {
-					if ( $this->taxo->args['exclusive'] )
+					if ( $this->taxo->args['exclusive'] ) {
 						$this->args['meta_box'] = array( $this, 'meta_box_radio' );
-					else
+					} else {
 						$this->args['meta_box'] = array( $this, 'meta_box_simple' );
-				} else if ( 'radio' == $this->args['meta_box'] ) {
+					}
+				} elseif ( 'radio' == $this->args['meta_box'] ) {
 					$this->taxo->args['exclusive'] = true;
 					$this->args['meta_box'] = array( $this, 'meta_box_radio' );
-				} else if ( 'dropdown' == $this->args['meta_box'] ) {
+				} elseif ( 'dropdown' == $this->args['meta_box'] ) {
 					$this->taxo->args['exclusive'] = true;
 					$this->args['meta_box'] = array( $this, 'meta_box_dropdown' );
 				}
 
 				# Add the meta box, using the plural or singular taxonomy label where relevant:
-				if ( $this->taxo->args['exclusive'] )
+				if ( $this->taxo->args['exclusive'] ) {
 					add_meta_box( "{$this->taxo->taxonomy}div", $tax->labels->singular_name, $this->args['meta_box'], $post_type, 'side' );
-				else
+				} else {
 					add_meta_box( "{$this->taxo->taxonomy}div", $tax->labels->name, $this->args['meta_box'], $post_type, 'side' );
+				}
 
-			} else if ( false !== $this->args['meta_box'] ) {
+			} elseif ( false !== $this->args['meta_box'] ) {
 
 				# This must be an 'exclusive' taxonomy. Add the radio meta box:
 				add_meta_box( "{$this->taxo->taxonomy}div", $tax->labels->singular_name, array( $this, 'meta_box_radio' ), $post_type, 'side' );
@@ -345,7 +354,7 @@ class Extended_Taxonomy_Admin {
 	 * @param array  $meta_box The meta box arguments
 	 * @return null
 	 */
-	function meta_box_radio( WP_Post $post, array $meta_box ) {
+	public function meta_box_radio( WP_Post $post, array $meta_box ) {
 
 		$walker = new Walker_ExtendedTaxonomyRadios;
 		$this->do_meta_box( $post, $walker, true, 'checklist' );
@@ -361,7 +370,7 @@ class Extended_Taxonomy_Admin {
 	 * @param array  $meta_box The meta box arguments
 	 * @return null
 	 */
-	function meta_box_dropdown( WP_Post $post, array $meta_box ) {
+	public function meta_box_dropdown( WP_Post $post, array $meta_box ) {
 
 		$walker = new Walker_ExtendedTaxonomyDropdown;
 		$this->do_meta_box( $post, $walker, true, 'dropdown' );
@@ -375,7 +384,7 @@ class Extended_Taxonomy_Admin {
 	 * @param array  $meta_box The meta box arguments
 	 * @return null
 	 */
-	function meta_box_simple( WP_Post $post, array $meta_box ) {
+	public function meta_box_simple( WP_Post $post, array $meta_box ) {
 
 		$this->do_meta_box( $post );
 
@@ -390,17 +399,18 @@ class Extended_Taxonomy_Admin {
 	 * @param string $type The taxonomy list type (checklist or dropdown)
 	 * @return null
 	 */
-	function do_meta_box( WP_Post $post, Walker $walker = null, $show_none = false, $type = 'checklist' ) {
+	protected function do_meta_box( WP_Post $post, Walker $walker = null, $show_none = false, $type = 'checklist' ) {
 
 		$taxonomy = $this->taxo->taxonomy;
 		$tax      = get_taxonomy( $taxonomy );
 		$selected = wp_get_object_terms( $post->ID, $taxonomy, array( 'fields' => 'ids' ) );
 
 		if ( $show_none ) {
-			if ( isset( $tax->labels->no_item ) )
+			if ( isset( $tax->labels->no_item ) ) {
 				$none = $tax->labels->no_item;
-			else
+			} else {
 				$none = __( 'Not Specified', 'ext_taxos' );
+			}
 		} else {
 			$none = '';
 		}
@@ -409,7 +419,7 @@ class Extended_Taxonomy_Admin {
 		<div id="taxonomy-<?php echo $taxonomy; ?>" class="categorydiv">
 
 			<?php
-			
+
 			switch ( $type ) {
 
 				case 'dropdown':
@@ -424,7 +434,7 @@ class Extended_Taxonomy_Admin {
 						'id'               => "{$taxonomy}dropdown",
 						'name'             => "tax_input[{$taxonomy}]",
 						'taxonomy'         => $taxonomy,
-						'walker'           => $walker
+						'walker'           => $walker,
 					) );
 
 					break;
@@ -448,15 +458,16 @@ class Extended_Taxonomy_Admin {
 						<?php
 
 						# Standard WP Walker_Category_Checklist does not cut it
-						if ( empty( $walker ) or !is_a( $walker, 'Walker' ) )
+						if ( empty( $walker ) || ! is_a( $walker, 'Walker' ) ) {
 							$walker = new Walker_ExtendedTaxonomyCheckboxes;
+						}
 
 						# Output the terms:
 						wp_terms_checklist( $post->ID, array(
 							'taxonomy'      => $taxonomy,
 							'walker'        => $walker,
 							'selected_cats' => $selected,
-							'checked_ontop' => $this->args['checked_ontop']
+							'checked_ontop' => $this->args['checked_ontop'],
 						) );
 
 						# Output the 'none' item:
@@ -465,16 +476,17 @@ class Extended_Taxonomy_Admin {
 							$o = (object) array(
 								'term_id' => 0,
 								'name'    => $none,
-								'slug'    => 'none'
+								'slug'    => 'none',
 							);
-							if ( empty( $selected ) )
+							if ( empty( $selected ) ) {
 								$_selected = array( 0 );
-							else
+							} else {
 								$_selected = $selected;
+							}
 							$args = array(
 								'taxonomy'      => $taxonomy,
 								'selected_cats' => $_selected,
-								'disabled'      => false
+								'disabled'      => false,
 							);
 							$walker->start_el( $output, $o, 1, $args );
 							$walker->end_el( $output, $o, 1, $args );
@@ -495,7 +507,7 @@ class Extended_Taxonomy_Admin {
 
 		</div>
 		<?php
-	
+
 	}
 
 	/**
@@ -503,7 +515,7 @@ class Extended_Taxonomy_Admin {
 	 *
 	 * @return null
 	 */
-	function right_now() {
+	public function right_now() {
 
 		$taxonomy = get_taxonomy( $this->taxo->taxonomy );
 		$count    = wp_count_terms( $this->taxo->taxonomy );
@@ -537,15 +549,15 @@ class Extended_Taxonomy_Admin {
 	 * @param array $messages An associative array of term updated messages with taxonomy name as keys.
 	 * @return array Updated array of term updated messages.
 	 */
-	function term_updated_messages( array $messages ) {
+	public function term_updated_messages( array $messages ) {
 
-		$messages[$this->taxo->taxonomy] = array(
+		$messages[ $this->taxo->taxonomy ] = array(
 			1 => sprintf( '%s added.', $this->taxo->tax_singular ),
 			2 => sprintf( '%s deleted.', $this->taxo->tax_singular ),
 			3 => sprintf( '%s updated.', $this->taxo->tax_singular ),
 			4 => sprintf( '%s not added.', $this->taxo->tax_singular ),
 			5 => sprintf( '%s not updated.', $this->taxo->tax_singular ),
-			6 => sprintf( '%s deleted.', $this->taxo->tax_plural )
+			6 => sprintf( '%s deleted.', $this->taxo->tax_plural ),
 		);
 
 		return $messages;
@@ -574,27 +586,28 @@ class Extended_Taxonomy_Admin {
  *
  * @uses Walker
  */
-if ( !class_exists( 'Walker_ExtendedTaxonomyCheckboxes' ) ) {
+if ( ! class_exists( 'Walker_ExtendedTaxonomyCheckboxes' ) ) {
 class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 
 	/**
 	 * Some member variables you don't need to worry too much about:
 	 */
-	var $tree_type = 'category';
-	var $db_fields = array(
+	public $tree_type = 'category';
+	public $db_fields = array(
 		'parent' => 'parent',
-		'id'     => 'term_id'
+		'id'     => 'term_id',
 	);
-	var $field = null;
+	public $field = null;
 
 	/**
 	 * Class constructor.
 	 *
 	 * @param array $args Optional arguments.
 	 */
-	function __construct( $args = null ) {
-		if ( $args and isset( $args['field'] ) )
+	public function __construct( $args = null ) {
+		if ( $args && isset( $args['field'] ) ) {
 			$this->field = $args['field'];
+		}
 	}
 
 	/**
@@ -604,7 +617,7 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 	 * @param int    $depth  Depth of term in reference to parents.
 	 * @param array  $args   Optional arguments.
 	 */
-	function start_lvl( &$output, $depth = 0, $args = array() ) {
+	public function start_lvl( &$output, $depth = 0, $args = array() ) {
 		$indent = str_repeat( "\t", $depth );
 		$output .= "$indent<ul class='children'>\n";
 	}
@@ -616,7 +629,7 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 	 * @param int    $depth  Depth of term in reference to parents.
 	 * @param array  $args   Optional arguments.
 	 */
-	function end_lvl( &$output, $depth = 0, $args = array() ) {
+	public function end_lvl( &$output, $depth = 0, $args = array() ) {
 		$indent = str_repeat( "\t", $depth );
 		$output .= "$indent</ul>\n";
 	}
@@ -630,17 +643,19 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 	 * @param array  $args              Optional arguments.
 	 * @param int    $current_object_id Current object ID.
 	 */
-	function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 )  {
+	public function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 ) {
 
 		$tax = get_taxonomy( $args['taxonomy'] );
 
-		if ( $this->field )
+		if ( $this->field ) {
 			$value = $object->{$this->field};
-		else
+		} else {
 			$value = $tax->hierarchical ? $object->term_id : $object->name;
+		}
 
-		if ( empty( $object->term_id ) and !$tax->hierarchical )
+		if ( empty( $object->term_id ) && ! $tax->hierarchical ) {
 			$value = '';
+		}
 
 		$output .= "\n<li id='{$args['taxonomy']}-{$object->term_id}'>" .
 			'<label class="selectit">' .
@@ -662,7 +677,7 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 	 * @param int    $depth  Depth of term in reference to parents.
 	 * @param array $args Optional arguments.
 	 */
-	function end_el( &$output, $object, $depth = 0, $args = array() ) {
+	public function end_el( &$output, $object, $depth = 0, $args = array() ) {
 		$output .= "</li>\n";
 	}
 
@@ -674,27 +689,28 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
  *
  * @uses Walker
  */
-if ( !class_exists( 'Walker_ExtendedTaxonomyRadios' ) ) {
+if ( ! class_exists( 'Walker_ExtendedTaxonomyRadios' ) ) {
 class Walker_ExtendedTaxonomyRadios extends Walker {
 
 	/**
 	 * Some member variables you don't need to worry too much about:
 	 */
-	var $tree_type = 'category';
-	var $db_fields = array(
+	public $tree_type = 'category';
+	public $db_fields = array(
 		'parent' => 'parent',
-		'id'     => 'term_id'
+		'id'     => 'term_id',
 	);
-	var $field = null;
+	public $field = null;
 
 	/**
 	 * Class constructor.
 	 *
 	 * @param array $args Optional arguments.
 	 */
-	function __construct( $args = null ) {
-		if ( $args and isset( $args['field'] ) )
+	public function __construct( $args = null ) {
+		if ( $args && isset( $args['field'] ) ) {
 			$this->field = $args['field'];
+		}
 	}
 
 	/**
@@ -704,9 +720,9 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 	 * @param int    $depth  Depth of term in reference to parents.
 	 * @param array  $args   Optional arguments.
 	 */
-	function start_lvl( &$output, $depth = 0, $args = array() ) {
+	public function start_lvl( &$output, $depth = 0, $args = array() ) {
 		$indent = str_repeat( "\t", $depth );
-		$output .= "$indent<ul class='children'>\n";
+		$output .= "{$indent}<ul class='children'>\n";
 	}
 
 	/**
@@ -716,9 +732,9 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 	 * @param int    $depth  Depth of term in reference to parents.
 	 * @param array  $args   Optional arguments.
 	 */
-	function end_lvl( &$output, $depth = 0, $args = array() ) {
+	public function end_lvl( &$output, $depth = 0, $args = array() ) {
 		$indent = str_repeat( "\t", $depth );
-		$output .= "$indent</ul>\n";
+		$output .= "{$indent}</ul>\n";
 	}
 
 	/**
@@ -730,17 +746,19 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 	 * @param array  $args              Optional arguments.
 	 * @param int    $current_object_id Current object ID.
 	 */
-	function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 )  {
+	public function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 ) {
 
 		$tax = get_taxonomy( $args['taxonomy'] );
 
-		if ( $this->field )
+		if ( $this->field ) {
 			$value = $object->{$this->field};
-		else
+		} else {
 			$value = $tax->hierarchical ? $object->term_id : $object->name;
+		}
 
-		if ( empty( $object->term_id ) and !$tax->hierarchical )
+		if ( empty( $object->term_id ) && ! $tax->hierarchical ) {
 			$value = '';
+		}
 
 		$output .= "\n<li id='{$args['taxonomy']}-{$object->term_id}'>" .
 			'<label class="selectit">' .
@@ -762,7 +780,7 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
 	 * @param int    $depth  Depth of term in reference to parents.
 	 * @param array  $args   Optional arguments.
 	 */
-	function end_el( &$output, $object, $depth = 0, $args = array() ) {
+	public function end_el( &$output, $object, $depth = 0, $args = array() ) {
 		$output .= "</li>\n";
 	}
 
@@ -774,27 +792,28 @@ class Walker_ExtendedTaxonomyRadios extends Walker {
  *
  * @uses Walker
  */
-if ( !class_exists( 'Walker_ExtendedTaxonomyDropdown' ) ) {
+if ( ! class_exists( 'Walker_ExtendedTaxonomyDropdown' ) ) {
 class Walker_ExtendedTaxonomyDropdown extends Walker {
 
 	/**
 	 * Some member variables you don't need to worry too much about:
 	 */
-	var $tree_type = 'category';
-	var $db_fields = array(
+	public $tree_type = 'category';
+	public $db_fields = array(
 		'parent' => 'parent',
-		'id'     => 'term_id'
+		'id'     => 'term_id',
 	);
-	var $field = null;
+	public $field = null;
 
 	/**
 	 * Class constructor.
 	 *
 	 * @param array $args Optional arguments.
 	 */
-	function __construct( $args = null ) {
-		if ( $args and isset( $args['field'] ) )
+	public function __construct( $args = null ) {
+		if ( $args && isset( $args['field'] ) ) {
 			$this->field = $args['field'];
+		}
 	}
 
 	/**
@@ -806,26 +825,29 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 	 * @param array  $args              Optional arguments.
 	 * @param int    $current_object_id Current object ID.
 	 */
-	function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 )  {
+	public function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 ) {
 
 		$pad = str_repeat( '&nbsp;', $depth * 3 );
 		$tax = get_taxonomy( $args['taxonomy'] );
 
-		if ( $this->field )
+		if ( $this->field ) {
 			$value = $object->{$this->field};
-		else
+		} else {
 			$value = $tax->hierarchical ? $object->term_id : $object->name;
+		}
 
-		if ( empty( $object->term_id ) and !$tax->hierarchical )
+		if ( empty( $object->term_id ) && ! $tax->hierarchical ) {
 			$value = '';
+		}
 
 		$cat_name = apply_filters( 'list_cats', $object->name, $object );
-		$output .= "\t<option class=\"level-$depth\" value=\"".esc_attr($value)."\"";
+		$output .= "\t<option class=\"level-{$depth}\" value=\"" . esc_attr( $value ) . '"';
 
-		if ( isset( $args['selected_cats'] ) and in_array( $value, (array) $args['selected_cats'] ) )
+		if ( isset( $args['selected_cats'] ) && in_array( $value, (array) $args['selected_cats'] ) ) {
 			$output .= ' selected="selected"';
-		else if ( isset( $args['selected'] ) and in_array( $object->term_id, (array) $args['selected'] ) )
+		} elseif ( isset( $args['selected'] ) && in_array( $object->term_id, (array) $args['selected'] ) ) {
 			$output .= ' selected="selected"';
+		}
 
 		$output .= '>';
 		$output .= $pad.$cat_name;
