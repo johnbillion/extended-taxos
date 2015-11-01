@@ -157,6 +157,7 @@ class Extended_Taxonomy {
 			'separate_items_with_commas' => sprintf( 'Separate %s with commas', $this->tax_plural_low ),
 			'add_or_remove_items'        => sprintf( 'Add or remove %s', $this->tax_plural_low ),
 			'choose_from_most_used'      => sprintf( 'Choose from most used %s', $this->tax_plural_low ),
+			'no_terms'                   => sprintf( 'No %s', $this->tax_plural ),
 			'no_item'                    => sprintf( 'No %s', $this->tax_singular ), # Custom label
 		);
 
