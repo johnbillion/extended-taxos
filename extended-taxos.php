@@ -28,22 +28,8 @@ GNU General Public License for more details.
  * Wrapper function for instantiating a new ExtendedTaxonomy object. This is the only function you need.
  * See the Extended_Taxonomy class for parameters.
  */
-if ( !function_exists( 'register_extended_taxonomy' ) ) {
-function register_extended_taxonomy( $taxonomy, $object_type, array $args = null, $names = null ) {
-
-	$fga = func_get_args();
-
-	# Back-compat for pre-1.5 argument list:
-	if ( is_string( $names ) or count( $fga ) > 4 ) {
-		_doing_it_wrong( __FUNCTION__, __( 'Name parameters should be passed as an associative array.', 'ext_cpts' ), '1.5' );
-		$names = array();
-		if ( isset( $fga[3] ) )
-			$names['plural'] = $fga[3];
-		if ( isset( $fga[4] ) )
-			$names['slug'] = $fga[4];
-		if ( isset( $fga[5] ) )
-			$names['singular'] = $fga[5];
-	}
+if ( ! function_exists( 'register_extended_taxonomy' ) ) {
+function register_extended_taxonomy( $taxonomy, $object_type, array $args = array(), $names = array() ) {
 
 	$taxo = new Extended_Taxonomy( $taxonomy, $object_type, $args, $names );
 
@@ -122,7 +108,7 @@ class Extended_Taxonomy {
 	 * @param array        $args        The taxonomy arguments (optional)
 	 * @param array        $names       An associative array of the plural, singular and slug names (optional)
 	 */
-	function __construct( $taxonomy, $object_type, array $args = null, array $names = null ) {
+	public function __construct( $taxonomy, $object_type, array $args = array(), array $names = array() ) {
 
 		if ( isset( $names['singular'] ) )
 			$this->tax_singular = $names['singular'];
