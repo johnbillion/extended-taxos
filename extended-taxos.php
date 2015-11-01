@@ -224,7 +224,6 @@ class Extended_Taxonomy_Admin {
 	 * @var array
 	 */
 	protected $defaults = array(
-		'show_in_nav_menus' => false,
 		'meta_box'          => null,  # Custom arg
 		'right_now'         => false, # Custom arg
 		'checked_ontop'     => null,  # Custom arg
@@ -247,7 +246,6 @@ class Extended_Taxonomy_Admin {
 	* - right_now - boolean - Whether to show this taxonomy on the 'Right Now' section of the WordPress
 	* dashboard. Defaults to false.
 	*
-	* @TODO show_in_nav_menus
 	* @TODO checked_ontop
 	*
 	* @param Extended_Taxonomy $taxo An extended taxonomy object
