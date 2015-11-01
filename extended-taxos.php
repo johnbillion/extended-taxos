@@ -161,7 +161,7 @@ class Extended_Taxonomy {
 			'no_terms'                   => sprintf( 'No %s', $this->tax_plural_low ),
 			'items_list_navigation'      => sprintf( '%s list navigation', $this->tax_plural ),
 			'items_list'                 => sprintf( '%s list', $this->tax_plural ),
-			'no_item'                    => sprintf( 'No %s', $this->tax_singular ), # Custom label
+			'no_item'                    => sprintf( 'No %s', $this->tax_singular_low ), # Custom label
 		);
 
 		# Only set rewrites if we need them
@@ -412,7 +412,7 @@ class Extended_Taxonomy_Admin {
 			if ( isset( $tax->labels->no_item ) ) {
 				$none = $tax->labels->no_item;
 			} else {
-				$none = __( 'Not Specified', 'ext_taxos' );
+				$none = __( 'Not specified', 'ext_taxos' );
 			}
 		} else {
 			$none = '';
@@ -452,6 +452,7 @@ class Extended_Taxonomy_Admin {
 							color: #888;
 							border-top: 1px solid #eee;
 							margin-top: 5px;
+							padding-top: 5px;
 						}
 					</style>
 
