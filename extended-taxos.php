@@ -436,12 +436,13 @@ class Extended_Taxonomy_Admin {
 				case 'dropdown':
 
 					wp_dropdown_categories( array(
+						'option_none_value' => ( is_taxonomy_hierarchical( $taxonomy ) ? '-1' : '' ),
 						'show_option_none' => $none,
 						'hide_empty'       => false,
 						'hierarchical'     => true,
 						'show_count'       => false,
 						'orderby'          => 'name',
-						'selected'         => $selected,
+						'selected'         => reset( $selected ),
 						'id'               => "{$taxonomy}dropdown",
 						'name'             => "tax_input[{$taxonomy}]",
 						'taxonomy'         => $taxonomy,
