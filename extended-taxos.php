@@ -228,7 +228,7 @@ class Extended_Taxonomy_Admin {
 	 */
 	protected $defaults = array(
 		'meta_box'          => null,  # Custom arg
-		'right_now'         => false, # Custom arg
+		'dashboard_glance'  => false, # Custom arg
 		'checked_ontop'     => null,  # Custom arg
 	);
 
@@ -246,15 +246,15 @@ class Extended_Taxonomy_Admin {
 	* a dropdown menu. You can also pass the name of a callback function, eg my_super_meta_box(), or
 	* boolean false to remove the meta box. Defaults to null, meaning the standard meta box is used.
 	*
-	* - right_now - boolean - Whether to show this taxonomy on the 'Right Now' section of the WordPress
-	* dashboard. Defaults to false.
+	* - dashboard_glance - boolean - Whether to show this taxonomy on the 'At a Glance' section of the
+	* WordPress dashboard. Defaults to false.
 	*
 	* @TODO checked_ontop
 	*
 	* @param Extended_Taxonomy $taxo An extended taxonomy object
 	* @param array             $args The admin arguments
 	*/
-	public function __construct( Extended_Taxonomy $taxo, array $args = null ) {
+	public function __construct( Extended_Taxonomy $taxo, array $args = array() ) {
 
 		$this->taxo = $taxo;
 
@@ -271,9 +271,17 @@ class Extended_Taxonomy_Admin {
 			add_action( 'add_meta_boxes', array( $this, 'meta_boxes' ), 10, 2 );
 		}
 
-		# 'Right Now' dashboard widget:
-		if ( $this->args['right_now'] ) {
-			add_action( 'right_now_content_table_end', array( $this, 'right_now' ) );
+		# 'At a Glance' dashboard panels:
+		if ( isset( $this->args['right_now'] ) ) {
+			_doing_it_wrong( 'register_extended_taxonomy', sprintf(
+				__( 'The %1$s argument is deprecated. Use %2$s instead.', 'extended-taxos' ),
+				'<code>right_now</code>',
+				'<code>dashboard_glance</code>'
+			), '1.6' );
+			$this->args['dashboard_glance'] = $this->args['right_now'];
+		}
+		if ( $this->args['dashboard_glance'] ) {
+			add_filter( 'dashboard_glance_items', array( $this, 'glance_items' ) );
 		}
 
 		# Term updated messages:
@@ -515,26 +523,34 @@ class Extended_Taxonomy_Admin {
 	}
 
 	/**
-	 * Add our taxonomy to the 'Right Now' widget on WordPress' dashboard.
+	 * Add our taxonomy to the 'At a Glance' widget on the WordPress 3.8+ dashboard.
 	 *
-	 * @return null
+	 * @param  array $items Array of items to display on the widget.
+	 * @return array        Updated array of items.
 	 */
-	public function right_now() {
+	public function glance_items( array $items ) {
 
 		$taxonomy = get_taxonomy( $this->taxo->taxonomy );
-		$count    = wp_count_terms( $this->taxo->taxonomy );
-		$text     = self::n( $taxonomy->labels->singular_name, $taxonomy->labels->name, $count );
-		$num      = number_format_i18n( $count );
 
-		if ( current_user_can( $taxonomy->cap->manage_terms ) ) {
-			$num  = '<a href="edit-tags.php?taxonomy=' . $this->taxo->taxonomy . '&amp;post_type=' . reset( $taxonomy->object_type ) . '">' . $num . '</a>';
-			$text = '<a href="edit-tags.php?taxonomy=' . $this->taxo->taxonomy . '&amp;post_type=' . reset( $taxonomy->object_type ) . '">' . $text . '</a>';
+		if ( ! current_user_can( $taxonomy->cap->manage_terms ) ) {
+			return $items;
+		}
+		if ( $taxonomy->_builtin ) {
+			return $items;
 		}
 
-		echo '<tr>';
-		echo '<td class="first b b-' . esc_attr( $this->taxo->taxonomy ) . '">' . $num . '</td>';
-		echo '<td class="t ' . esc_attr( $this->taxo->taxonomy ) . '">' . $text . '</td>';
-		echo '</tr>';
+		# Get the labels and format the counts:
+		$count = wp_count_terms( $this->taxo->taxonomy );
+		$text  = self::n( $taxonomy->labels->singular_name, $taxonomy->labels->name, $count );
+		$num   = number_format_i18n( $count );
+
+		# This is absolutely not localisable. WordPress 3.8 didn't add a new taxonomy label.
+		$text = '<a href="edit-tags.php?taxonomy=' . $this->taxo->taxonomy . '&amp;post_type=' . reset( $taxonomy->object_type ) . '">' . $num . ' ' . $text . '</a>';
+
+		# Go!
+		$items[] = $text;
+
+		return $items;
 
 	}
 
