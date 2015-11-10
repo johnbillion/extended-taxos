@@ -426,6 +426,14 @@ class Extended_Taxonomy_Admin {
 			$none = '';
 		}
 
+		/**
+		 * Allows for developers to execute code before the taxonomy meta box content outputs to the page.
+		 * 
+		 * @param stdClass $tax The current taxonomy object.
+		 */
+		do_action( 'extended_taxos_meta_box_before', $tax );
+
+
 		?>
 		<div id="taxonomy-<?php echo esc_attr( $taxonomy ); ?>" class="categorydiv">
 
@@ -520,6 +528,13 @@ class Extended_Taxonomy_Admin {
 
 		</div>
 		<?php
+
+		/**
+		 * Allows for developers to execute code after the taxonomy meta box content outputs to the page.
+		 * 
+		 * @param stdClass $tax The current taxonomy object.
+		 */
+		do_action( 'extended_taxos_meta_box_after', $tax );
 
 	}
 
