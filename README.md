@@ -36,6 +36,12 @@ This library requires its sister library [Extended CPTs](https://github.com/john
 
 ## Usage ##
 
+Extended Taxonomies is a developer library, not a plugin, which means you need to include it somewhere in your own plugin or theme:
+
+```php
+require_once 'extended-taxos/extended-taxos.php';
+```
+
 Need a simple taxonomy with no frills? You can register a taxonomy with two parameters:
 
 ```php
