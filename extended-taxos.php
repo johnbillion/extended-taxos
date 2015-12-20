@@ -1,28 +1,24 @@
 <?php
-/*
-Plugin Name:  Extended Taxonomies
-Description:  Extended custom taxonomies.
-Version:      1.6
-Plugin URI:   https://github.com/johnbillion/extended-taxos
-Author:       John Blackbourn
-Author URI:   https://johnblackbourn.com
-Text Domain:  extended-taxos
-Domain Path:  /languages/
-License:      GPL v2 or later
-
-Copyright © 2012-2015 John Blackbourn
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-*/
+/**
+ * Extended custom taxonomies for WordPress.
+ *
+ * @package   ExtendedTaxos
+ * @version   2.0.0
+ * @author    John Blackbourn <https://johnblackbourn.com>
+ * @link      https://github.com/johnbillion/extended-taxos
+ * @copyright 2012-2015 John Blackbourn
+ * @license   GPL v2 or later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 
 /**
  * Wrapper function for instantiating a new ExtendedTaxonomy object. This is the only function you need.
