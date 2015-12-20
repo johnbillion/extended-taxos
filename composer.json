@@ -16,10 +16,11 @@
 		}
 	],
 	"require": {
+		"johnbillion/extended-cpts": "Extended Custom Post Types",
 		"php": ">=5.4",
 		"composer/installers": "~1.0"
 	},
 	"suggest": {
-		"johnbillion/extended-cpts": "Extended Custom Post Types"
+		"wpackagist-plugin/rewrite-testing": "Rewrite Rule Testing"
 	}
 }

@@ -179,12 +179,33 @@ class Extended_Taxonomy {
 			$this->args['labels'] = array_merge( $this->defaults['labels'], $args['labels'] );
 		}
 
+		# Rewrite testing:
+		if ( $this->args['rewrite'] ) {
+			add_filter( 'rewrite_testing_tests', array( $this, 'rewrite_testing_tests' ), 1 );
+		}
+
 		# Register taxonomy when WordPress initialises:
 		if ( 'init' === current_filter() ) {
 			call_user_func( array( $this, 'register_taxonomy' ) );
 		} else {
 			add_action( 'init', array( $this, 'register_taxonomy' ), 9 );
 		}
+
+	}
+
+	/**
+	 * Add our rewrite tests to the Rewrite Rule Testing tests array.
+	 *
+	 * @codeCoverageIgnore
+	 *
+	 * @param  array $tests The existing rewrite rule tests.
+	 * @return array        Updated rewrite rule tests.
+	 */
+	public function rewrite_testing_tests( array $tests ) {
+
+		$extended = new Extended_Taxonomy_Rewrite_Testing( $this );
+
+		return array_merge( $tests, $extended->get_tests() );
 
 	}
 
@@ -872,6 +893,43 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 			$output .= '&nbsp;&nbsp;('. number_format_i18n( $object->count ) .')';
 		}
 		$output .= "</option>\n";
+	}
+
+}
+}
+
+if ( ! class_exists( 'Extended_Taxonomy_Rewrite_Testing' ) && class_exists( 'Extended_Rewrite_Testing' ) ) {
+/**
+ * @codeCoverageIgnore
+ */
+class Extended_Taxonomy_Rewrite_Testing extends Extended_Rewrite_Testing {
+
+	public $taxo;
+
+	public function __construct( Extended_Taxonomy $taxo ) {
+		$this->taxo = $taxo;
+	}
+
+	public function get_tests() {
+
+		global $wp_rewrite;
+
+		if ( ! $wp_rewrite->using_permalinks() ) {
+			return array();
+		}
+
+		if ( ! isset( $wp_rewrite->extra_permastructs[ $this->taxo->taxonomy ] ) ) {
+			return array();
+		}
+
+		$struct     = $wp_rewrite->extra_permastructs[ $this->taxo->taxonomy ];
+		$tax        = get_taxonomy( $this->taxo->taxonomy );
+		$name       = sprintf( '%s (%s)', $tax->labels->name, $this->taxo->taxonomy );
+
+		return array(
+			$name => $this->get_rewrites( $struct, array() ),
+		);
+
 	}
 
 }
