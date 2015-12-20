@@ -133,6 +133,23 @@ class Extended_Taxonomy {
 	 */
 	public function __construct( $taxonomy, $object_type, array $args = array(), array $names = array() ) {
 
+		/**
+		 * Filter the arguments for this taxonomy.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param array $args The taxonomy arguments.
+		 */
+		$args  = apply_filters( "ext-taxos/{$taxonomy}/args", $args );
+		/**
+		 * Filter the names for this taxonomy.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param array $names The plural, singular, and slug names (if any were specified).
+		 */
+		$names = apply_filters( "ext-taxos/{$taxonomy}/names", $names );
+
 		if ( isset( $names['singular'] ) ) {
 			$this->tax_singular = $names['singular'];
 		} else {
