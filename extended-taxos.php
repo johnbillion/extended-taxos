@@ -25,7 +25,7 @@
  * See the Extended_Taxonomy class for parameters.
  */
 if ( ! function_exists( 'register_extended_taxonomy' ) ) {
-function register_extended_taxonomy( $taxonomy, $object_type, array $args = array(), $names = array() ) {
+function register_extended_taxonomy( $taxonomy, $object_type, array $args = array(), array $names = array() ) {
 
 	$taxo = new Extended_Taxonomy( $taxonomy, $object_type, $args, $names );
 
@@ -295,14 +295,6 @@ class Extended_Taxonomy_Admin {
 		}
 
 		# 'At a Glance' dashboard panels:
-		if ( isset( $this->args['right_now'] ) ) {
-			_doing_it_wrong( 'register_extended_taxonomy', sprintf(
-				__( 'The %1$s argument is deprecated. Use %2$s instead.', 'extended-taxos' ),
-				'<code>right_now</code>',
-				'<code>dashboard_glance</code>'
-			), '1.6' );
-			$this->args['dashboard_glance'] = $this->args['right_now'];
-		}
 		if ( $this->args['dashboard_glance'] ) {
 			add_filter( 'dashboard_glance_items', array( $this, 'glance_items' ) );
 		}
