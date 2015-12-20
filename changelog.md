@@ -1,6 +1,15 @@
 
 ## Changelog ##
 
+### 2.0.0 ###
+
+* Bump the minimum supported WordPress version to 4.4.
+* Extended Taxonomies no longer contains a plugin header, reinforcing the fact this is a developer library.
+* Implement support for custom columns on the term listing screen in the admin area.
+* Implement automatic integration with the Rewrite Rule Testing plugin.
+* Add filters for the taxonomy arguments and taxonomy names.
+* Add before and after actions to the custom meta box output.
+
 ### 1.6.0 ###
 
 * Correctly handle non-hierarchical taxonomies in the `dropdown` meta box.
