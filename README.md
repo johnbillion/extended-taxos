@@ -36,6 +36,15 @@ register_extended_taxonomy( 'story', 'post', array(
 	# Show this taxonomy in the 'At a Glance' dashboard widget:
 	'dashboard_glance' => true,
 
+	# Add a custom column to the admin screen:
+	'admin_cols' => array(
+		'updated' => array(
+			'title'       => 'Updated',
+			'meta_key'    => 'updated_date',
+			'date_format' => 'd/m/Y'
+		),
+	),
+
 ), array(
 
 	# Override the base names used for labels:

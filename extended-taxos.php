@@ -100,6 +100,9 @@ class Extended_Taxonomy {
 	 * - allow_hierarchy - boolean - All this does currently is disable hierarchy in the taxonomy's
 	 * rewrite rules. Defaults to false.
 	 *
+	 * - admin_cols - array - Associative array of admin screen columns to show for this taxonomy. See
+	 * the `Extended_Taxonomy_Admin::cols()` method for more information.
+	 *
 	 * @param string       $taxonomy    The taxonomy name
 	 * @param array|string $object_type Name(s) of the object type(s) for the taxonomy
 	 * @param array        $args        The taxonomy arguments (optional)
@@ -247,10 +250,13 @@ class Extended_Taxonomy_Admin {
 		'meta_box'          => null,  # Custom arg
 		'dashboard_glance'  => false, # Custom arg
 		'checked_ontop'     => null,  # Custom arg
+		'admin_cols'        => null,  # Custom arg
 	);
 
 	public $taxo;
 	public $args;
+	protected $_cols;
+	protected $the_cols = null;
 
 	/**
 	* Class constructor.
@@ -303,6 +309,216 @@ class Extended_Taxonomy_Admin {
 
 		# Term updated messages:
 		add_filter( 'term_updated_messages', array( $this, 'term_updated_messages' ), 1, 2 );
+
+		# Admin columns:
+		if ( $this->args['admin_cols'] ) {
+			add_filter( "manage_edit-{$this->taxo->taxonomy}_columns",  array( $this, '_log_default_cols' ), 0 );
+			add_filter( "manage_edit-{$this->taxo->taxonomy}_columns",  array( $this, 'cols' ) );
+			add_action( "manage_{$this->taxo->taxonomy}_custom_column", array( $this, 'col' ), 10, 3 );
+		}
+
+	}
+
+	/**
+	 * Logs the default columns so we don't remove any custom columns added by other plugins.
+	 *
+	 * @param  array $cols The default columns for this taxonomy screen
+	 * @return array       The default columns for this taxonomy screen
+	 */
+	public function _log_default_cols( array $cols ) {
+
+		return $this->_cols = $cols;
+
+	}
+
+	/**
+	 * Add columns to the admin screen for this taxonomy.
+	 *
+	 * Each item in the `admin_cols` array is either a string name of an existing column, or an associative
+	 * array of information for a custom column.
+	 *
+	 * Defining a custom column is easy. Just define an array which includes the column title, column
+	 * type, and optional callback function. You can display columns for term meta or custom functions.
+	 *
+	 * The example below adds two columns; one which displays the value of the term's `term_updated` meta
+	 * key, and one which calls a custom callback function:
+	 *
+	 *     register_extended_taxonomy( 'foo', 'bar', array(
+	 *         'admin_cols' => array(
+	 *             'foo_updated' => array(
+	 *                 'title'    => 'Updated',
+	 *                 'meta_key' => 'term_updated'
+	 *             ),
+	 *             'foo_bar' => array(
+	 *                 'title'    => 'Example',
+	 *                 'function' => 'my_custom_callback'
+	 *             )
+	 *         )
+	 *     ) );
+	 *
+	 * That's all you need to do. The columns will handle safely outputting the data
+	 * (escaping text, and comma-separating taxonomy terms). No more messing about with all of those
+	 * annoyingly named column filters and actions.
+	 *
+	 * Each item in the `admin_cols` array must contain one of the following elements which defines the column type:
+	 *
+	 *  - meta_key - A term meta key
+	 *  - function - The name of a callback function
+	 *
+	 * The value for the corresponding term meta are safely escaped and output into the column.
+	 *
+	 * There are a few optional elements:
+	 *
+	 *  - title - Generated from the field if not specified.
+	 *  - function - The name of a callback function for the column (eg. `my_function`) which gets called
+	 *    instead of the built-in function for handling that column. The function is passed the term ID as
+	 *    its first parameter.
+	 *  - date_format - This is used with the `meta_key` column type. The value of the meta field will be
+	 *    treated as a timestamp if this is present. Unix and MySQL format timestamps are supported in the
+	 *    meta value. Pass in boolean true to format the date according to the 'Date Format' setting, or pass
+	 *    in a valid date formatting string (eg. `d/m/Y H:i:s`).
+	 *  - cap - A capability required in order for this column to be displayed to the current user. Defaults
+	 *    to null, meaning the column is shown to all users.
+	 *
+	 * Note that sortable admin columns are not yet supported.
+	 *
+	 * @param  array $cols Associative array of columns
+	 * @return array       Updated array of columns
+	 */
+	public function cols( array $cols ) {
+
+		// This function gets called multiple times, so let's cache it for efficiency:
+		if ( isset( $this->the_cols ) ) {
+			return $this->the_cols;
+		}
+
+		$new_cols = array();
+		$keep = array(
+			'cb',
+			'name',
+			'description',
+			'slug',
+		);
+
+		# Add existing columns we want to keep:
+		foreach ( $cols as $id => $title ) {
+			if ( in_array( $id, $keep ) && ! isset( $this->args['admin_cols'][ $id ] ) ) {
+				$new_cols[ $id ] = $title;
+			}
+		}
+
+		# Add our custom columns:
+		foreach ( array_filter( $this->args['admin_cols'] ) as $id => $col ) {
+			if ( is_string( $col ) && isset( $cols[ $col ] ) ) {
+				# Existing (ie. built-in) column with id as the value
+				$new_cols[ $col ] = $cols[ $col ];
+			} else if ( is_string( $col ) && isset( $cols[ $id ] ) ) {
+				# Existing (ie. built-in) column with id as the key and title as the value
+				$new_cols[ $id ] = $col;
+			} else if ( is_array( $col ) ) {
+				if ( isset( $col['cap'] ) && ! current_user_can( $col['cap'] ) ) {
+					continue;
+				}
+				if ( ! isset( $col['title'] ) ) {
+					$col['title'] = $this->get_item_title( $col );
+				}
+				$new_cols[ $id ] = $col['title'];
+			}
+		}
+
+		# Re-add any custom columns:
+		$custom   = array_diff_key( $cols, $this->_cols );
+		$new_cols = array_merge( $new_cols, $custom );
+
+		return $this->the_cols = $new_cols;
+
+	}
+
+	/**
+	 * Output the column data for our custom columns.
+	 *
+	 * @param string $string      Blank string.
+	 * @param string $column_name Name of the column.
+	 * @param int    $term_id     Term ID.
+	 */
+	public function col( $string, $col, $term_id ) {
+
+		# Shorthand:
+		$c = $this->args['admin_cols'];
+
+		# We're only interested in our custom columns:
+		$custom_cols = array_filter( array_keys( $c ) );
+
+		if ( ! in_array( $col, $custom_cols ) ) {
+			return;
+		}
+
+		if ( isset( $c[ $col ]['function'] ) ) {
+			call_user_func( $c[ $col ]['function'], $term_id );
+		} else if ( isset( $c[ $col ]['meta_key'] ) ) {
+			$this->col_term_meta( $c[ $col ]['meta_key'], $c[ $col ], $term_id );
+		}
+
+	}
+
+	/**
+	 * Output column data for a post meta field.
+	 *
+	 * @param string $meta_key The post meta key
+	 * @param array  $args     Optional. Array of arguments for this field
+	 * @param int    $term_id  Term ID.
+	 */
+	public function col_term_meta( $meta_key, array $args, $term_id ) {
+
+		$vals = get_term_meta( $term_id, $meta_key, false );
+		$echo = array();
+		sort( $vals );
+
+		if ( isset( $args['date_format'] ) ) {
+
+			if ( true === $args['date_format'] ) {
+				$args['date_format'] = get_option( 'date_format' );
+			}
+
+			foreach ( $vals as $val ) {
+
+				if ( is_numeric( $val ) ) {
+					$echo[] = date( $args['date_format'], $val );
+				} else if ( ! empty( $val ) ) {
+					$echo[] = mysql2date( $args['date_format'], $val );
+				}
+			}
+		} else {
+
+			foreach ( $vals as $val ) {
+
+				if ( ! empty( $val ) || ( '0' === $val ) ) {
+					$echo[] = $val;
+				}
+			}
+		}
+
+		if ( empty( $echo ) ) {
+			echo '&#8212;';
+		} else {
+			echo esc_html( implode( ', ', $echo ) );
+		}
+
+	}
+
+	/**
+	 * Get a sensible title for the current item (usually the arguments array for a column)
+	 *
+	 * @param  array  $item An array of arguments
+	 * @return string       The item title
+	 */
+	protected function get_item_title( array $item ) {
+
+		if ( isset( $item['meta_key'] ) ) {
+			return ucwords( trim( str_replace( array( '_', '-' ), ' ', $item['meta_key'] ) ) );
+		} else {
+			return '';
+		}
 
 	}
 
