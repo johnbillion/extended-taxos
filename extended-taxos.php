@@ -662,12 +662,15 @@ class Extended_Taxonomy_Admin {
 		}
 
 		/**
-		 * Allows for developers to execute code before the taxonomy meta box content outputs to the page.
-		 * 
-		 * @param stdClass $tax The current taxonomy object.
+		 * Execute code before the taxonomy meta box content outputs to the page.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param stdClass $tax  The current taxonomy object.
+		 * @param WP_Post  $post The current post object.
+		 * @param string   $type The taxonomy list type ('checklist' or 'dropdown').
 		 */
-		do_action( 'extended_taxos_meta_box_before', $tax );
-
+		do_action( 'ext-taxos/meta_box/before', $tax, $post, $type );
 
 		?>
 		<div id="taxonomy-<?php echo esc_attr( $taxonomy ); ?>" class="categorydiv">
@@ -765,11 +768,15 @@ class Extended_Taxonomy_Admin {
 		<?php
 
 		/**
-		 * Allows for developers to execute code after the taxonomy meta box content outputs to the page.
-		 * 
-		 * @param stdClass $tax The current taxonomy object.
+		 * Execute code after the taxonomy meta box content outputs to the page.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param stdClass $tax  The current taxonomy object.
+		 * @param WP_Post  $post The current post object.
+		 * @param string   $type The taxonomy list type ('checklist' or 'dropdown').
 		 */
-		do_action( 'extended_taxos_meta_box_after', $tax );
+		do_action( 'ext-taxos/meta_box/after', $tax, $post, $type );
 
 	}
 
