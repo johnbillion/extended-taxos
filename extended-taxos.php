@@ -881,7 +881,7 @@ class Extended_Taxonomy_Admin {
  *
  * @uses Walker
  */
-if ( ! class_exists( 'Walker_ExtendedTaxonomyCheckboxes' ) ) {
+if ( ! class_exists( 'Walker_ExtendedTaxonomyCheckboxes' ) && class_exists( 'Walker' ) ) {
 class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 
 	/**
