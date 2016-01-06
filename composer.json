@@ -16,7 +16,7 @@
 		}
 	],
 	"require": {
-		"johnbillion/extended-cpts": "dev-master",
+		"johnbillion/extended-cpts": "dev-dhomer-autoload",
 		"php": ">=5.4",
 		"composer/installers": "~1.0"
 	},
