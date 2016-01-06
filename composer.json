@@ -16,7 +16,7 @@
 		}
 	],
 	"require": {
-		"johnbillion/extended-cpts": "~3.0",
+		"johnbillion/extended-cpts": "dev-master",
 		"php": ">=5.4",
 		"composer/installers": "~1.0"
 	},
