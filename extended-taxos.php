@@ -3,10 +3,10 @@
  * Extended custom taxonomies for WordPress.
  *
  * @package   ExtendedTaxos
- * @version   2.0.0
+ * @version   2.0.1
  * @author    John Blackbourn <https://johnblackbourn.com>
  * @link      https://github.com/johnbillion/extended-taxos
- * @copyright 2012-2015 John Blackbourn
+ * @copyright 2012-2016 John Blackbourn
  * @license   GPL v2 or later
  *
  * This program is free software; you can redistribute it and/or modify
