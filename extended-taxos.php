@@ -266,9 +266,15 @@ class Extended_Taxonomy {
 		}
 
 		if ( $query_var && count( get_post_types( array( 'query_var' => $query_var ) ) ) ) {
-			trigger_error( sprintf( __( 'Taxonomy query var "%s" clashes with a post type query var of the same name', 'ext_taxos' ), $query_var ), E_USER_ERROR );
+			trigger_error( esc_html( sprintf(
+				__( 'Taxonomy query var "%s" clashes with a post type query var of the same name', 'ext_taxos' ),
+				$query_var
+			) ), E_USER_ERROR );
 		} elseif ( in_array( $query_var, array( 'type', 'tab' ) ) ) {
-			trigger_error( sprintf( __( 'Taxonomy query var "%s" is not allowed', 'ext_taxos' ), $query_var ), E_USER_ERROR );
+			trigger_error( esc_html( sprintf(
+				__( 'Taxonomy query var "%s" is not allowed', 'ext_taxos' ),
+				$query_var
+			) ), E_USER_ERROR );
 		} else {
 			register_taxonomy( $this->taxonomy, $this->object_type, $this->args );
 		}
@@ -433,7 +439,7 @@ class Extended_Taxonomy_Admin {
 				$new_cols[ $col ] = $cols[ $col ];
 			} else if ( is_string( $col ) && isset( $cols[ $id ] ) ) {
 				# Existing (ie. built-in) column with id as the key and title as the value
-				$new_cols[ $id ] = $col;
+				$new_cols[ $id ] = esc_html( $col );
 			} else if ( is_array( $col ) ) {
 				if ( isset( $col['cap'] ) && ! current_user_can( $col['cap'] ) ) {
 					continue;
@@ -441,7 +447,7 @@ class Extended_Taxonomy_Admin {
 				if ( ! isset( $col['title'] ) ) {
 					$col['title'] = $this->get_item_title( $col );
 				}
-				$new_cols[ $id ] = $col['title'];
+				$new_cols[ $id ] = esc_html( $col['title'] );
 			}
 		}
 
@@ -672,7 +678,7 @@ class Extended_Taxonomy_Admin {
 			if ( isset( $tax->labels->no_item ) ) {
 				$none = $tax->labels->no_item;
 			} else {
-				$none = __( 'Not specified', 'ext_taxos' );
+				$none = esc_html__( 'Not specified', 'ext_taxos' );
 			}
 		} else {
 			$none = '';
@@ -820,7 +826,7 @@ class Extended_Taxonomy_Admin {
 		$num   = number_format_i18n( $count );
 
 		# This is absolutely not localisable. WordPress 3.8 didn't add a new taxonomy label.
-		$text = '<a href="edit-tags.php?taxonomy=' . $this->taxo->taxonomy . '&amp;post_type=' . reset( $taxonomy->object_type ) . '">' . $num . ' ' . $text . '</a>';
+		$text = '<a href="edit-tags.php?taxonomy=' . esc_attr( $this->taxo->taxonomy ) . '&amp;post_type=' . esc_attr( reset( $taxonomy->object_type ) ) . '">' . esc_html( $num . ' ' . $text ) . '</a>';
 
 		# Go!
 		$items[] = $text;
@@ -847,12 +853,12 @@ class Extended_Taxonomy_Admin {
 	public function term_updated_messages( array $messages ) {
 
 		$messages[ $this->taxo->taxonomy ] = array(
-			1 => sprintf( '%s added.', $this->taxo->tax_singular ),
-			2 => sprintf( '%s deleted.', $this->taxo->tax_singular ),
-			3 => sprintf( '%s updated.', $this->taxo->tax_singular ),
-			4 => sprintf( '%s not added.', $this->taxo->tax_singular ),
-			5 => sprintf( '%s not updated.', $this->taxo->tax_singular ),
-			6 => sprintf( '%s deleted.', $this->taxo->tax_plural ),
+			1 => sprintf( esc_html( '%s added.', $this->taxo->tax_singular ) ),
+			2 => sprintf( esc_html( '%s deleted.', $this->taxo->tax_singular ) ),
+			3 => sprintf( esc_html( '%s updated.', $this->taxo->tax_singular ) ),
+			4 => sprintf( esc_html( '%s not added.', $this->taxo->tax_singular ) ),
+			5 => sprintf( esc_html( '%s not updated.', $this->taxo->tax_singular ) ),
+			6 => sprintf( esc_html( '%s deleted.', $this->taxo->tax_plural ) ),
 		);
 
 		return $messages;
@@ -954,8 +960,8 @@ class Walker_ExtendedTaxonomyCheckboxes extends Walker {
 
 		$output .= "\n<li id='{$args['taxonomy']}-{$object->term_id}'>" .
 			'<label class="selectit">' .
-			'<input value="' . $value . '" type="checkbox" name="tax_input[' . $args['taxonomy'] . '][]" ' .
-				'id="in-'.$args['taxonomy'].'-' . $object->term_id . '"' .
+			'<input value="' . esc_attr( $value ) . '" type="checkbox" name="tax_input[' . esc_attr( $args['taxonomy'] ) . '][]" ' .
+				'id="in-' . esc_attr( $args['taxonomy'] ) . '-' . intval( $object->term_id ) . '"' .
 				checked( in_array( $object->term_id, (array) $args['selected_cats'] ), true, false ) .
 				disabled( empty( $args['disabled'] ), false, false ) .
 			' /> ' .
@@ -1147,7 +1153,7 @@ class Walker_ExtendedTaxonomyDropdown extends Walker {
 		$output .= '>';
 		$output .= $pad . esc_html( $cat_name );
 		if ( $args['show_count'] ) {
-			$output .= '&nbsp;&nbsp;('. number_format_i18n( $object->count ) .')';
+			$output .= '&nbsp;&nbsp;(' . esc_html( number_format_i18n( $object->count ) ) . ')';
 		}
 		$output .= "</option>\n";
 	}
