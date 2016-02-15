@@ -487,9 +487,9 @@ class Extended_Taxonomy_Admin {
 	}
 
 	/**
-	 * Output column data for a post meta field.
+	 * Output column data for a term meta field.
 	 *
-	 * @param string $meta_key The post meta key
+	 * @param string $meta_key The term meta key
 	 * @param array  $args     Optional. Array of arguments for this field
 	 * @param int    $term_id  Term ID.
 	 */
