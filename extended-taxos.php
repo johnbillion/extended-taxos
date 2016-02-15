@@ -582,16 +582,16 @@ class Extended_Taxonomy_Admin {
 			if ( $this->args['meta_box'] ) {
 
 				# Set the 'meta_box' argument to the actual meta box callback function name:
-				if ( 'simple' == $this->args['meta_box'] ) {
+				if ( 'simple' === $this->args['meta_box'] ) {
 					if ( $this->taxo->args['exclusive'] ) {
 						$this->args['meta_box'] = array( $this, 'meta_box_radio' );
 					} else {
 						$this->args['meta_box'] = array( $this, 'meta_box_simple' );
 					}
-				} elseif ( 'radio' == $this->args['meta_box'] ) {
+				} elseif ( 'radio' === $this->args['meta_box'] ) {
 					$this->taxo->args['exclusive'] = true;
 					$this->args['meta_box'] = array( $this, 'meta_box_radio' );
-				} elseif ( 'dropdown' == $this->args['meta_box'] ) {
+				} elseif ( 'dropdown' === $this->args['meta_box'] ) {
 					$this->taxo->args['exclusive'] = true;
 					$this->args['meta_box'] = array( $this, 'meta_box_dropdown' );
 				}
@@ -875,7 +875,7 @@ class Extended_Taxonomy_Admin {
 	 */
 	public static function n( $single, $plural, $number ) {
 
-		return ( 1 == $number ) ? $single : $plural;
+		return ( 1 === intval( $number ) ) ? $single : $plural;
 
 	}
 
