@@ -853,12 +853,12 @@ class Extended_Taxonomy_Admin {
 	public function term_updated_messages( array $messages ) {
 
 		$messages[ $this->taxo->taxonomy ] = array(
-			1 => sprintf( esc_html( '%s added.', $this->taxo->tax_singular ) ),
-			2 => sprintf( esc_html( '%s deleted.', $this->taxo->tax_singular ) ),
-			3 => sprintf( esc_html( '%s updated.', $this->taxo->tax_singular ) ),
-			4 => sprintf( esc_html( '%s not added.', $this->taxo->tax_singular ) ),
-			5 => sprintf( esc_html( '%s not updated.', $this->taxo->tax_singular ) ),
-			6 => sprintf( esc_html( '%s deleted.', $this->taxo->tax_plural ) ),
+			1 => esc_html( sprintf( '%s added.', $this->taxo->tax_singular ) ),
+			2 => esc_html( sprintf( '%s deleted.', $this->taxo->tax_singular ) ),
+			3 => esc_html( sprintf( '%s updated.', $this->taxo->tax_singular ) ),
+			4 => esc_html( sprintf( '%s not added.', $this->taxo->tax_singular ) ),
+			5 => esc_html( sprintf( '%s not updated.', $this->taxo->tax_singular ) ),
+			6 => esc_html( sprintf( '%s deleted.', $this->taxo->tax_plural ) ),
 		);
 
 		return $messages;
