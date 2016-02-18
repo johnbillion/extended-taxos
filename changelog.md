@@ -1,6 +1,14 @@
 
 ## Changelog ##
 
+### 2.0.2 ###
+
+* Bugfix for the term updated messages.
+
+### 2.0.1 ###
+
+* Add some missing escaping and update some inline docs.
+
 ### 2.0.0 ###
 
 * Bump the minimum supported WordPress version to 4.4.

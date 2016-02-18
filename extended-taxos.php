@@ -3,7 +3,7 @@
  * Extended custom taxonomies for WordPress.
  *
  * @package   ExtendedTaxos
- * @version   2.0.1
+ * @version   2.0.2
  * @author    John Blackbourn <https://johnblackbourn.com>
  * @link      https://github.com/johnbillion/extended-taxos
  * @copyright 2012-2016 John Blackbourn
