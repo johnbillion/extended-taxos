@@ -1,6 +1,10 @@
 
 ## Changelog ##
 
+### 2.0.3 ###
+
+* Improve the URL escaping in the At A Glance widget.
+
 ### 2.0.2 ###
 
 * Bugfix for the term updated messages.
