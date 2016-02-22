@@ -826,7 +826,11 @@ class Extended_Taxonomy_Admin {
 		$num   = number_format_i18n( $count );
 
 		# This is absolutely not localisable. WordPress 3.8 didn't add a new taxonomy label.
-		$text = '<a href="edit-tags.php?taxonomy=' . esc_attr( $this->taxo->taxonomy ) . '&amp;post_type=' . esc_attr( reset( $taxonomy->object_type ) ) . '">' . esc_html( $num . ' ' . $text ) . '</a>';
+		$url = add_query_arg( [
+			'taxonomy'  => $this->taxo->taxonomy,
+			'post_type' => reset( $taxonomy->object_type ),
+		], admin_url( 'edit-tags.php' ) );
+		$text = '<a href="' . esc_url( $url ) . '">' . esc_html( $num . ' ' . $text ) . '</a>';
 
 		# Go!
 		$items[] = $text;
