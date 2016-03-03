@@ -9,6 +9,11 @@
 			"homepage": "https://johnblackbourn.com/"
 		}
 	],
+	"autoload": [
+		"files": [
+			"extended-taxos.php"
+		]
+	],
 	"repositories":[
 		{
 			"type": "composer",
