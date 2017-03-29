@@ -228,8 +228,8 @@ class Extended_Taxonomy {
 		}
 
 		# Register taxonomy when WordPress initialises:
-		if ( 'init' === current_filter() || did_action( 'init' ) ) {
-			$this->register_taxonomy();
+		if ( 'init' === current_filter() ) {
+			call_user_func( array( $this, 'register_taxonomy' ) );
 		} else {
 			add_action( 'init', array( $this, 'register_taxonomy' ), 9 );
 		}
