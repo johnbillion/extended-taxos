@@ -297,6 +297,7 @@ class Extended_Taxonomy_Admin {
 		'dashboard_glance'  => false, # Custom arg
 		'checked_ontop'     => null,  # Custom arg
 		'admin_cols'        => null,  # Custom arg
+		'required'          => false,  # Custom arg
 	);
 
 	public $taxo;
@@ -716,6 +717,7 @@ class Extended_Taxonomy_Admin {
 						'name'              => "tax_input[{$taxonomy}]",
 						'taxonomy'          => $taxonomy,
 						'walker'            => $walker,
+						'required'          => $this->args['required'],
 					) );
 
 					break;
